@@ -15,23 +15,55 @@ setup = ->
   canvas = document.querySelector('canvas')
   ctx = canvas.getContext('2d')
   localMediaStream = null
+  captureInterval = null
+  stopCheckingTimeout = null
 
   snapshot = ->
-    if localMediaStream
-      ctx.drawImage(video, 0, 0)
-      # "image/webp" works in Chrome.
-      # Other browsers will fall back to image/png.
-      imgSnapshot = canvas.toDataURL('image/webp')
-      document.querySelector('img').src = imgSnapshot
-      zxing.decode(imgSnapshot)
+    return unless localMediaStream
+    ctx.drawImage(video, 0, 0)
+    # "image/webp" works in Chrome.
+    # Other browsers will fall back to image/png.
+    imgSnapshot = canvas.toDataURL('image/webp')
+    document.querySelector('img').src = imgSnapshot
+    zxing.decode(imgSnapshot)
 
-  video.addEventListener('click', snapshot, false)
+  zxing.callback = (data) ->
+    clearTimeout stopCheckingTimeout
+    clearInterval captureInterval
+    captureInterval = null
+    stopCheckingTimeout = null
+    console.log "Found:", data
+
+  videoLoaded = ->
+    # Correctly resize canvas element to same as video resolution
+    canvas.width = @videoWidth
+    canvas.height = @videoHeight
+
+    # Note: We purposely set these timeouts up AFTER the call to `getUserMedia`
+    # due to code execution being delayed while the browser waits for user to
+    # Allow access to video
+
+    # Check the video for a qr code every 300ms
+    captureInterval = setInterval snapshot, 300
+
+    # Don't check forever
+    stopCheckingTimeout = setTimeout(
+      ->
+        clearInterval captureInterval
+        captureInterval = null
+        stopCheckingTimeout = null
+        console.log "Stopped checking for qrcode"
+      5000
+    )
 
   navigator.getUserMedia(
     {video: true}
     (stream) ->
       video.src = window.URL.createObjectURL(stream)
       localMediaStream = stream
+
+      # Wait for the video stream's meta data to be loaded
+      video.addEventListener 'loadedmetadata', videoLoaded, false
     (err) ->
       if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
         console.log "Unable to access camera - check the browser settings before continuing"
@@ -41,8 +73,3 @@ if navigator.getUserMedia
   setup()
 else
   console.log "getUserMedia not supported"
-
-zxing.callback = (data) ->
-  console.log data
-
-# "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOYAAADmAQAAAADpEcQWAAABEElEQVR42u2Y0Q3DMAhEkTxARvLqHskDWKLAkaqtnH6fJSJUJXn5wZwPXNE/15KiRYsWJaPiV1cdTbVNf2j01O9n1ykRPd+Q0yltdosl/mvZnUJt8SOvk2g8P2ZER0M56xoKCe10xUaxQyGep/3LRj+8D+/3PklGhyXi6NYPP10XagED9+Cncg3k4jc6fnXFSd1GhiEPr8UBFNadix+Nkp9i2WHdRqMWB1ArRGh+rKiI0lNIJWeSFBI9Dd/2uN7bk51qfoMSaPvu7JwUyonmfo9/9DQnKIG3mIfv5is2ikRs6ktLVD2EtmzxY3/yoqQ4v4SK5ACaJwJFLfJowE2z44jkQLLtkmS0/qEqWrQoP30B7ejryI4bvTwAAAAASUVORK5CYII=")
