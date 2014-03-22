@@ -38,7 +38,15 @@ setup = (callback) ->
     return unless localMediaStream
     ctx.drawImage(video, 0, 0)
     imgdecodeFrame = getImageDataUri()
-    zxing.decode(imgdecodeFrame)
+    zxing.decode(
+      imgdecodeFrame
+      (err, data) ->
+        return console.log(err) if err?
+        console.log "QR Code data:", data
+        imgdecodeFrame = getImageDataUri()
+        image.src = imgdecodeFrame
+        cleanupScanning()
+    )
 
   cleanupScanning = ->
 
@@ -51,12 +59,6 @@ setup = (callback) ->
     captureInterval = null
     stopCheckingTimeout = null
     scanning = false
-
-  zxing.callback = (data) ->
-    console.log "QR Code data:", data
-    imgdecodeFrame = getImageDataUri()
-    image.src = imgdecodeFrame
-    cleanupScanning()
 
   videoLoaded = ->
     # Correctly resize canvas element to same as video resolution
@@ -100,9 +102,7 @@ beginScan = ->
 
 setup (err) ->
 
-  if err
-    console.log err
-    return
+  return console.log(err) if err?
 
   button = document.querySelector('button')
   button.addEventListener 'click', beginScan
