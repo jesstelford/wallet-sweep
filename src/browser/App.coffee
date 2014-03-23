@@ -16,6 +16,7 @@ KEEP_TRYING_TIMEOUT = 10000
 scanning = false
 localMediaStream = null
 video = document.querySelector('video')
+input = document.querySelectorAll('input#private_key')[0]
 
 setup = (callback) ->
 
@@ -42,6 +43,7 @@ setup = (callback) ->
       imgdecodeFrame
       (err, data) ->
         return console.log(err) if err?
+        input.value = data
         console.log "QR Code data:", data
         imgdecodeFrame = getImageDataUri()
         image.src = imgdecodeFrame
