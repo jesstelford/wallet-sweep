@@ -1,0 +1,40 @@
+<header>
+  <h1>Wallet Sweeper</h1>
+</header>
+
+<input type="text" name="private_key" placeholder="Private Key" value="{{private_key}}" />
+<button id="submit" name="submit" type="submit">Sweep</button>
+
+<div class="dividerText">- or -</div>
+
+<button id="scan_qrcode" name="scan_qrcode">Scan QR Code</button><br />
+
+<div class="modal qrcode">
+  <video autoplay></video>
+  <img src="" />
+</div>
+
+{{! Used for capturing a video frame }}
+<canvas style="display:none;"></canvas>
+
+<section id="instructions">
+  <h1>Instructions</h1>
+  <p>
+    <em>Sweeping</em> a wallet (not be confused with <em>Importing a Private
+    Key</em>) is the act of transferring all the coins from one wallet (the
+    "source") to another (the "destination").
+  </p>
+  <ol>
+    <li>Enter the destination Address (eg; of your personal wallet)</li>
+    <li>Enter or scan the QR Code of the Private Key of wallet you want to sweep</li>
+  </ol>
+</section>
+
+<footer>
+  <p>
+    Donate to support development - <a href="doge://DBKUFm8zxtdeXEDVM2DR6SeMGAwuoke2iV" title="Donate to support development">DBKUFm8zxtdeXEDVM2DR6SeMGAwuoke2iV</a>
+  </p>
+  <p>
+    Created by <a href="http://jes.st">Jess Telford</a>
+  </p>
+</footer>

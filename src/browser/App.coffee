@@ -4,9 +4,9 @@ require 'console-reset'
 zxing = require 'zxing'
 
 Handlebars = require './vendor/handlebars'
-require 'templates/test.hbs'
+require 'templates/main.hbs'
 appContainer = document.getElementById 'app'
-appContainer.innerHTML = Handlebars.templates['test']({whatIsIt: 'test'})
+appContainer.innerHTML = Handlebars.templates['main']()
 
 navigator.getUserMedia = navigator.getUserMedia or navigator.webkitGetUserMedia or navigator.mozGetUserMedia or navigator.msGetUserMedia
 
@@ -104,5 +104,5 @@ setup (err) ->
 
   return console.log(err) if err?
 
-  button = document.querySelector('button')
+  button = document.querySelectorAll('button#scan_qrcode')[0]
   button.addEventListener 'click', beginScan
