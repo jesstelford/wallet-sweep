@@ -1,6 +1,7 @@
 # This file will be exported to the global namespace as a commonJS module based
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
+classUtils = require 'class-utils'
 zxing = require 'zxing'
 
 Handlebars = require './vendor/handlebars'
@@ -15,8 +16,14 @@ KEEP_TRYING_TIMEOUT = 10000
 
 scanning = false
 localMediaStream = null
-video = document.querySelector('video')
+lastPrivateKeyValue = null
 input = document.querySelectorAll('input#private_key')[0]
+video = document.querySelectorAll('.modal.qrcode video')[0]
+modal = document.querySelectorAll('.modal.qrcode')[0]
+image = document.querySelectorAll('.modal.qrcode img')[0]
+cancelVideo = document.querySelectorAll('.modal.qrcode button#cancel_video')[0]
+rescanVideo = document.querySelectorAll('.modal.qrcode button#rescan_video')[0]
+acceptVideo = document.querySelectorAll('.modal.qrcode button#accept_video')[0]
 
 setup = (callback) ->
 
@@ -24,7 +31,6 @@ setup = (callback) ->
     return callback "getUserMedia not supported"
 
   canvas = document.querySelector('canvas')
-  image = document.querySelector('img')
   ctx = canvas.getContext('2d')
   image.src = ""
   captureInterval = null
@@ -42,9 +48,24 @@ setup = (callback) ->
     zxing.decode(
       imgdecodeFrame
       (err, data) ->
-        return console.log(err) if err?
-        input.value = data
-        console.log "QR Code data:", data
+        if err?
+          console.log(err)
+          return
+        else if typeof data isnt "string"
+          console.log "Didn't detect Key"
+          classUtils.replaceClass modal, "scanning", "not_found"
+          rescanVideo.removeAttribute "disabled"
+        else if data[0] isnt "S"
+          console.log "Not a Dogecoin Private Key"
+          classUtils.replaceClass modal, "scanning", "not_found"
+          rescanVideo.removeAttribute "disabled"
+        else
+          # Looks like a private key, hooray!
+          lastPrivateKeyValue = input.value
+          input.value = data
+          console.log "QR Code data:", data
+          classUtils.replaceClass modal, "scanning", "found"
+          acceptVideo.removeAttribute "disabled"
         imgdecodeFrame = getImageDataUri()
         image.src = imgdecodeFrame
         cleanupScanning()
@@ -52,9 +73,14 @@ setup = (callback) ->
 
   cleanupScanning = ->
 
+    return unless scanning
+
     localMediaStream.stop()
     localMediaStream = null
     video.src = ""
+
+    classUtils.addClass video, "hidden"
+    classUtils.removeClass image, "hidden"
 
     clearTimeout stopCheckingTimeout
     clearInterval captureInterval
@@ -77,10 +103,30 @@ setup = (callback) ->
     # Don't check forever
     stopCheckingTimeout = setTimeout(
       ->
-        console.log "Giving up on scanning for QR Code"
+        ctx.drawImage(video, 0, 0)
+        imgdecodeFrame = getImageDataUri()
+        image.src = imgdecodeFrame
+
+        classUtils.replaceClass modal, "scanning", "not_found"
+        rescanVideo.removeAttribute "disabled"
+        acceptVideo.setAttribute "disabled", "disabled"
         cleanupScanning()
       KEEP_TRYING_TIMEOUT
     )
+
+  cancelVideo.addEventListener 'click', ->
+    classUtils.addClass modal, "hidden"
+    if scanning then cleanupScanning()
+    input.value = lastPrivateKeyValue
+
+  acceptVideo.addEventListener 'click', ->
+    classUtils.addClass modal, "hidden"
+    if scanning then cleanupScanning()
+
+  rescanVideo.addEventListener 'click', ->
+    classUtils.addClass modal, "hidden"
+    if scanning then cleanupScanning()
+    beginScan()
 
   # Wait for the video stream's meta data to be loaded
   video.addEventListener 'loadedmetadata', videoLoaded, false
@@ -91,6 +137,18 @@ beginScan = ->
 
   return if scanning
   scanning = true
+
+  classUtils.addClass image, "hidden"
+  classUtils.removeClass video, "hidden"
+
+  classUtils.removeClass modal, "not_found"
+  classUtils.removeClass modal, "found"
+  classUtils.removeClass modal, "hidden"
+  classUtils.addClass modal, "scanning"
+
+  cancelVideo.removeAttribute "disabled"
+  rescanVideo.setAttribute "disabled", "disabled"
+  acceptVideo.setAttribute "disabled", "disabled"
 
   navigator.getUserMedia(
     {video: true}
@@ -105,6 +163,4 @@ beginScan = ->
 setup (err) ->
 
   return console.log(err) if err?
-
-  button = document.querySelectorAll('button#scan_qrcode')[0]
-  button.addEventListener 'click', beginScan
+  document.querySelectorAll('button#scan_qrcode')[0].addEventListener 'click', beginScan

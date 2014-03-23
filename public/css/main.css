@@ -1,0 +1,293 @@
+/* apply a natural box layout model to all elements */
+/* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
+*, *:before, *:after {
+	-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+
+a, a:visited {
+	color: #2a80b9;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #439fe0;
+	text-decoration: none;
+}
+
+header, footer {
+	width: 100%;
+	text-align: center;
+}
+
+header {
+	height: 150px;
+	background-color: #967adc;
+	color: white;
+	margin-bottom: 30px;
+	position: relative;
+}
+
+header:before {
+	content: "Sweeper";
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	width: 100%;
+	padding-top: 20px;
+	font-size: 8em;
+	color: #c8b2ff;
+	font-weight: bold;
+}
+
+section, footer {
+	color: #555;
+}
+
+footer {
+	padding-top: 20px;
+	background-color: #F2EDE0;
+}
+
+footer p {
+	padding-bottom: 20px;
+	margin-bottom: 0;
+}
+
+header h1 {
+	position: relative;
+	margin: 0;
+	padding-top: 20px;
+	height: 150px;
+	font-size: 8em;
+	overflow: hidden;
+}
+
+#main {
+	position: relative;
+	width: 600px;
+	margin: 0 auto;
+	padding-top: 20px;
+}
+
+#user_input {
+	text-align: center;
+	font-size: 1.2em;
+	margin-top: 50px;
+}
+
+#user_input .divider_text {
+	padding: 30px;
+	color: #aaa;
+	font-style: italic;
+}
+
+#user_input #input_wrapper {
+	display: block;
+	position: relative;
+	margin: 0 auto;
+}
+
+input[type=text], button {
+	border: 1px solid #ddd;
+	outline: none;
+}
+
+input[type=text]:focus, button:not([disabled]):focus,
+input[type=text]:active, button:not([disabled]):active,
+.input_and_button input[type=text]:focus ~ button:not([disabled]),
+.input_and_button input[type=text]:active ~ button:not([disabled]),
+.input_and_button input[type=text] ~ button:not([disabled]):focus ,
+.input_and_button input[type=text] ~ button:not([disabled]):active {
+	border: 1px solid #aaa;
+}
+
+.input_and_button input[type=text] {
+	border-right: 0;
+}
+
+.input_and_button input[type=text] ~ button,
+.input_and_button input[type=text]:focus ~ button,
+.input_and_button input[type=text]:active ~ button {
+	border-left: 0;
+}
+
+input[type=text] {
+	padding: 8px 10px;
+	display: inline-block;
+}
+
+button {
+	padding: 8px;
+	display: inline-block;
+	text-align: center;
+	background-color: #ddd;
+	color: #222;
+}
+
+button[disabled],
+button[disabled]:hover,
+button[disabled]:active,
+button[disabled]:focus {
+	background-color: #eee;
+	border-color: #eee;
+	color: #aaa;
+	cursor: default;
+}
+
+button.cancel:not([disabled]) {
+	background-color: #df5e6a;
+	border-color: #df5e6a;
+	color: white;
+}
+
+button.cancel:not([disabled]):focus,
+button.cancel:not([disabled]):active {
+	border-color: #aa2230;
+}
+
+button.continue:not([disabled]) {
+	background-color: #9bc969;
+	border-color: #9bc969;
+	color: white;
+}
+
+button.continue:not([disabled]):focus,
+button.continue:not([disabled]):active {
+	border-color: #628e33;
+}
+
+.input_and_button {
+	display: inline-block;
+	white-space: nowrap;
+	vertical-align: middle;
+	width: 100%;
+}
+
+.input_and_button input[type=text] {
+	vertical-align: top;
+	position: relative;
+}
+
+#user_input input#private_key {
+	width: 100%;
+	margin-right: -104px;
+	padding-right: 114px;
+	z-index: 1;
+}
+
+#user_input button#submit {
+	position: relative;
+	width: 100px;
+	z-index: 2;
+}
+
+#user_input input#to_address {
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+.modal {
+	position: absolute;
+	left: 50%;
+	z-index: 10;
+	background-color: white;
+	-webkit-box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
+	box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
+}
+
+.modal.qrcode {
+	display: block;
+	text-align: center;
+	top: -50px;
+	width: 400px;
+	margin-left: -200px;
+}
+
+.modal.qrcode #not_found_message,
+.modal.qrcode #found_message,
+.modal.qrcode video, .modal.qrcode img {
+	margin: 40px 40px 15px 40px;
+	width: 320px;
+	height: 240px;
+	line-height: 240px;
+}
+
+.modal.qrcode video, .modal.qrcode img {
+	display: block;
+	border: 1px solid #aaa;
+}
+
+.modal.qrcode button {
+	margin-bottom: 20px;
+}
+
+.modal.qrcode.not_found button#rescan_video,
+.modal.qrcode.scanning button#accept_video,
+.modal.qrcode.found button#accept_video {
+	display: inline;
+}
+
+.modal.qrcode.scanning button#rescan_video,
+.modal.qrcode.not_found button#accept_video,
+.modal.qrcode.found button#rescan_video {
+	display: none;
+}
+
+.modal.qrcode #not_found_message,
+.modal.qrcode #found_message {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 11;
+	background-color: rgba(255,255,255,0.75);
+	text-align: center;
+	font-size: 2em;
+}
+
+.modal.qrcode.not_found #not_found_message,
+.modal.qrcode.found #found_message {
+	display: block;
+}
+
+.modal.qrcode #not_found_message {
+	color: #aa2230;
+}
+
+.modal.qrcode #found_message {
+	color: #628e33;
+}
+
+.modal.qrcode #not_found_message:before,
+.modal.qrcode #found_message:before {
+	display: inline-block;
+	border-radius: 50%;
+	width: 1.5em;
+	height: 1.5em;
+	line-height: 1.5em;
+	border: 1px solid;
+	color: white;
+	margin-right: 0.3em;
+}
+
+.modal.qrcode #not_found_message:before {
+	content: '✘';
+	border-color: #aa2230;
+	background-color: #df5e6a;
+}
+
+.modal.qrcode #found_message:before {
+	content: '✔';
+	border-color: #628e33;
+	background-color: #9bc969;
+}
+
+section#user_input, section#instructions {
+	margin-bottom: 100px;
+	text-align: center;
+}
+
+section#instructions ol {
+	margin-top: 40px;
+}
