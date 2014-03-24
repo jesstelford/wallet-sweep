@@ -24,6 +24,32 @@ app = h5bp.createServer
 #if process.env.NODE_ENV is 'development'
   # Put development environment only routes + code here
 
+getUnconfirmedTransactions = (transactions) ->
+  return _(transactions).filter (transaction) ->
+    return transaction.confirmations < CONFIRMATION_THRESHOLD
+
+buildUnconfirmedErrors = (transactions) ->
+  return _(transactions).reduce(
+    (message, transaction) ->
+      confirmationsLeft = CONFIRMATION_THRESHOLD - transaction.confirmations
+      return "#{message}\n #{confirmationsLeft} confirmations left for txn [#{transaction.tx_hash}]"
+    "The following transactions are too new:"
+  )
+
+buildTransactionInputs = (transactions) ->
+  return _(transactions).map (transaction) ->
+    return {
+      txid: transaction.tx_hash
+      vout: transaction.tx_output_n
+    }
+
+addUp = (objs, getValue) ->
+  return _(objs).reduce(
+    (total, transaction) ->
+      return total + getValue(transaction)
+    0
+  )
+
 app.get '/test', (req, res) ->
 
   result = {
@@ -54,7 +80,7 @@ app.get '/test', (req, res) ->
         "tx_output_n": 0
         "script": "76a914f8783344af8532a73dfa97ebddfcc7527a2c6e5a88ac"
         "value": "10000000000"
-        "confirmations": 80296
+        "confirmations": 8000
       }
     ]
     "success": 1
@@ -64,36 +90,22 @@ app.get '/test', (req, res) ->
     # TODO: Better error message / response
     res.send 200, "Couldn't gather address transactions"
 
-  unconfirmedTransactions = _(result.unspent_outputs).filter (transaction) ->
-    return transaction.confirmations < CONFIRMATION_THRESHOLD
+  unconfirmedTransactions = getUnconfirmedTransactions result.unspent_outputs
 
   if unconfirmedTransactions.length > 0
 
     # TODO: Better error message / response
-    message = _(unconfirmedTransactions).reduce(
-      (message, transaction) ->
-        confirmationsLeft = CONFIRMATION_THRESHOLD - transaction.confirmations
-        return "#{message}\n #{confirmationsLeft} confirmations left for txn [#{transaction.tx_hash}]"
-      "The following transactions are too new:"
-    )
-    res.send 200, message
+    res.send 200, buildUnconfirmedErrors unconfirmedTransactions
     return
 
-  inputs = _(result.unspent_outputs).map (transaction) ->
-    return {
-      txid: transaction.tx_hash
-      vout: transaction.tx_output_n
-    }
+  inputs = buildTransactionInputs result.unspent_outputs
 
-  totalCoins = _(result.unspent_outputs).reduce(
-    (total, transaction) ->
-      return total + parseInt(transaction.value, 10)
-    0
-  )
+  totalCoins = addUp result.unspent_outputs, (transaction) ->
+    return parseInt(transaction.value, 10)
 
   if totalCoins < NETWORK_FEE
     # TODO: Is this possible? What's the minimum transaction possible?
-    res.send 200, "Error: Only #{totalCoins} in wallet! Network fee alone is #{NETWORKFEE}. Please add more coins before retrying."
+    res.send 200, "Error: Only #{totalCoins} in wallet! Network fee alone is #{NETWORK_FEE}. Please add more coins before retrying."
     return
 
   # Deduct fee
