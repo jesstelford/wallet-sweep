@@ -1,7 +1,7 @@
 h5bp = require 'h5bp'
 path = require 'path'
-Handlebars = require 'handlebars'
 _ = require 'underscore'
+Handlebars = require 'handlebars'
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 
 require './templates/index'
@@ -25,6 +25,7 @@ app = h5bp.createServer
   # Put development environment only routes + code here
 
 app.get '/test', (req, res) ->
+
   result = {
     "unspent_outputs": [
       {
@@ -63,33 +64,35 @@ app.get '/test', (req, res) ->
     # TODO: Better error message / response
     res.send 200, "Couldn't gather address transactions"
 
-  transactionOutputs = []
-  totalCoins = 0
+  unconfirmedTransactions = _(result.unspent_outputs).filter (transaction) ->
+    return transaction.confirmations < CONFIRMATION_THRESHOLD
 
-  for transaction in result.unspent_outputs
-    if transaction.confirmations < CONFIRMATION_THRESHOLD
+  if unconfirmedTransactions.length > 0
 
-      # Delete the array
-      transactionOutputs.length = 0
+    # TODO: Better error message / response
+    message = _(unconfirmedTransactions).reduce(
+      (message, transaction) ->
+        confirmationsLeft = CONFIRMATION_THRESHOLD - transaction.confirmations
+        return "#{message}\n #{confirmationsLeft} confirmations left for txn [#{transaction.tx_hash}]"
+      "The following transactions are too new:"
+    )
+    res.send 200, message
+    return
 
-      # TODO: Better error message / response
-      confirmationsLeft = CONFIRMATION_THRESHOLD - transaction.confirmations
-      res.send 200, "Transaction is too new, needs another #{confirmationsLeft} confirmation(s)"
-      return
-
-    transactionOutputs.push {
+  inputs = _(result.unspent_outputs).map (transaction) ->
+    return {
       txid: transaction.tx_hash
       vout: transaction.tx_output_n
     }
 
-    totalCoins += parseInt(transaction.value, 10)
-
-  if transactionOutputs.length isnt result.unspent_outputs.length
-    # TODO: Is this ever even possible since we're looping over the array above?
-    res.send 200, "Unable to process all the wallet's transactions :("
-    return
+  totalCoins = _(result.unspent_outputs).reduce(
+    (total, transaction) ->
+      return total + parseInt(transaction.value, 10)
+    0
+  )
 
   if totalCoins < NETWORK_FEE
+    # TODO: Is this possible? What's the minimum transaction possible?
     res.send 200, "Error: Only #{totalCoins} in wallet! Network fee alone is #{NETWORKFEE}. Please add more coins before retrying."
     return
 
@@ -97,20 +100,20 @@ app.get '/test', (req, res) ->
   totalCoins -= NETWORK_FEE
 
   # Convert to decimal for JSON RPC
-  totalCoins = Math.round totalCoins / SCALE_FACTOR
+  totalCoins = totalCoins / SCALE_FACTOR
 
-  transactionAmount = {}
-  transactionAmount[req.query.address] = totalCoins
+  outputs = {}
+  outputs[req.query.address] = totalCoins
 
   rawTransaction = null
 
-  dogecoin.createRawTransaction transactionOutputs, transactionAmount, (err, result) ->
+  dogecoin.createRawTransaction inputs, outputs, (err, result) ->
     if err?
       #TODO: Better error handling!
       console.log err
     rawTransaction = result
 
-    res.send 200, "createrawtransaction #{JSON.stringify(transactionOutputs)} #{JSON.stringify(transactionAmount)}\n#{rawTransaction}"
+    res.send 200, "createrawtransaction #{JSON.stringify(inputs)} #{JSON.stringify(outputs)}\n#{rawTransaction}"
 
 
 app.get '/', (req, res) ->
