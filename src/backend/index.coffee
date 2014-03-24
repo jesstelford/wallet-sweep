@@ -10,7 +10,7 @@ require './templates/index'
 CONFIRMATION_THRESHOLD = 6
 
 # TODO: Are fees required for low values? What about huge transactions (dust)?
-# What about huge values? Minimum fee? WAT!?
+# What about huge values? Minimum fee? Transaction KiB? WAT!?
 NETWORK_FEE = 10000
 SCALE_FACTOR = 1e8
 
