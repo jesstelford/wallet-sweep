@@ -1,0 +1,14 @@
+{
+  host: 'localhost',
+  port: 22555,
+  method: 'POST',
+  user: '',
+  pass: '',
+  headers: {
+    'Host': 'localhost',
+    'Authorization':  ''
+  }
+  passphrasecallback: null,
+  https: false,
+  ca: null
+}

@@ -2,6 +2,8 @@ h5bp = require 'h5bp'
 path = require 'path'
 Handlebars = require 'handlebars'
 _ = require 'underscore'
+dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
+
 require './templates/index'
 
 # TODO: Why 6?
@@ -100,7 +102,15 @@ app.get '/test', (req, res) ->
   transactionAmount = {}
   transactionAmount[req.query.address] = totalCoins
 
-  res.send 200, "createrawtransaction #{JSON.stringify(transactionOutputs)} #{JSON.stringify(transactionAmount)}"
+  rawTransaction = null
+
+  dogecoin.createRawTransaction transactionOutputs, transactionAmount, (err, result) ->
+    if err?
+      #TODO: Better error handling!
+      console.log err
+    rawTransaction = result
+
+    res.send 200, "createrawtransaction #{JSON.stringify(transactionOutputs)} #{JSON.stringify(transactionAmount)}\n#{rawTransaction}"
 
 
 app.get '/', (req, res) ->

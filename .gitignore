@@ -8,3 +8,4 @@ node_modules
 *.swo
 *.vim
 tags
+src/backend/dogecoin-config.json
