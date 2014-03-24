@@ -36,7 +36,7 @@ buildUnconfirmedErrors = (transactions) ->
     "The following transactions are too new:"
   )
 
-buildTransactionInputs = (transactions) ->
+buildRPCTransactionInputs = (transactions) ->
   return _(transactions).map (transaction) ->
     return {
       txid: transaction.tx_hash
@@ -49,6 +49,52 @@ addUp = (objs, getValue) ->
       return total + getValue(transaction)
     0
   )
+
+# @param next = (`err`, `result`) ->
+getInputs = (transactions, next) ->
+
+  unconfirmedTransactions = getUnconfirmedTransactions transactions
+
+  if unconfirmedTransactions.length > 0
+
+    return next {
+      error: "E_UNCONFIRMED_TRANSACTIONS"
+      result:
+        threshold: CONFIRMATION_THRESHOLD
+        unconfirmed: unconfirmedTransactions
+    }
+
+  next null, {
+    inputs: buildRPCTransactionInputs transactions
+    totalCoins: addUp transactions, (transaction) ->
+      return parseInt(transaction.value, 10)
+  }
+
+applyNetworkFee = (totalCoins, next) ->
+
+  if totalCoins < NETWORK_FEE
+    # TODO: Is this possible? What's the minimum transaction possible?
+    return next {
+      error: "E_NOT_ENOUGH_FUNDS"
+      result:
+        required: NETWORK_FEE
+    }
+
+  # Deduct fee
+  totalCoins -= NETWORK_FEE
+
+  next null, totalCoins
+
+getOutputs = (toAddress, totalCoins, next) ->
+
+  # Convert to decimal for JSON RPC
+  totalCoins = totalCoins / SCALE_FACTOR
+
+  outputs = {}
+  outputs[toAddress] = totalCoins
+
+  next null, outputs
+
 
 app.get '/test', (req, res) ->
 
@@ -90,42 +136,27 @@ app.get '/test', (req, res) ->
     # TODO: Better error message / response
     res.send 200, "Couldn't gather address transactions"
 
-  unconfirmedTransactions = getUnconfirmedTransactions result.unspent_outputs
+  getInputs result.unspent_outputs, (err, inputs) ->
 
-  if unconfirmedTransactions.length > 0
-
-    # TODO: Better error message / response
-    res.send 200, buildUnconfirmedErrors unconfirmedTransactions
-    return
-
-  inputs = buildTransactionInputs result.unspent_outputs
-
-  totalCoins = addUp result.unspent_outputs, (transaction) ->
-    return parseInt(transaction.value, 10)
-
-  if totalCoins < NETWORK_FEE
-    # TODO: Is this possible? What's the minimum transaction possible?
-    res.send 200, "Error: Only #{totalCoins} in wallet! Network fee alone is #{NETWORK_FEE}. Please add more coins before retrying."
-    return
-
-  # Deduct fee
-  totalCoins -= NETWORK_FEE
-
-  # Convert to decimal for JSON RPC
-  totalCoins = totalCoins / SCALE_FACTOR
-
-  outputs = {}
-  outputs[req.query.address] = totalCoins
-
-  rawTransaction = null
-
-  dogecoin.createRawTransaction inputs, outputs, (err, result) ->
     if err?
-      #TODO: Better error handling!
-      console.log err
-    rawTransaction = result
+      return res.json err
 
-    res.send 200, "createrawtransaction #{JSON.stringify(inputs)} #{JSON.stringify(outputs)}\n#{rawTransaction}"
+    applyNetworkFee inputs.totalCoins, (err, totalCoins) ->
+
+      if err?
+        return res.json err
+
+      getOutputs req.query.address, totalCoins, (err, outputs) ->
+
+        if err?
+          return res.json err
+
+        dogecoin.createRawTransaction inputs.inputs, outputs, (err, result) ->
+
+          if err?
+            return res.json err
+
+          res.send 200, "createrawtransaction #{JSON.stringify(inputs)} #{JSON.stringify(outputs)}\n#{result}"
 
 
 app.get '/', (req, res) ->
