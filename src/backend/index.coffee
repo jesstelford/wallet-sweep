@@ -101,32 +101,11 @@ app.get '/test', (req, res) ->
   result = {
     "unspent_outputs": [
       {
-        "tx_hash": "b450b9531203ee9fe4572eeb5d750d2e4c7c150ca5fff855ae6c13fdde0cae26"
-        "tx_output_n": 0
-        "script": "76a914f8783344af8532a73dfa97ebddfcc7527a2c6e5a88ac"
-        "value": "100000000"
-        "confirmations": 86100
-      }
-      {
-        "tx_hash": "a49e865ec24107b282a399712e26b6622fb55bb678a0ad50ad5f0868ec2496ee"
-        "tx_output_n": 0
-        "script": "76a914f8783344af8532a73dfa97ebddfcc7527a2c6e5a88ac"
-        "value": "100000000"
-        "confirmations": 85228
-      }
-      {
-        "tx_hash": "27dc67b2e6ec8ca311bc04b8456f0f26646aef809ed5d23b7d1f7306efa70eff"
-        "tx_output_n": 0
-        "script": "76a914f8783344af8532a73dfa97ebddfcc7527a2c6e5a88ac"
-        "value": "19900000000"
-        "confirmations": 84835
-      }
-      {
-        "tx_hash": "23eaceb721c96f31a772346fb6f7b9e20c35388469c5a151aa4b00a07bfbe60f"
-        "tx_output_n": 0
-        "script": "76a914f8783344af8532a73dfa97ebddfcc7527a2c6e5a88ac"
-        "value": "10000000000"
-        "confirmations": 8000
+        "tx_hash": "abe81569c15384e6d5586d38a5d28634894f586680e65d7114c094abcc9eb56e"
+        "tx_output_n": 1
+        "script": "76a914b153a719b03c52ed8f07856e869304e4bd3732fe88ac"
+        "value": "1000000000000"
+        "confirmations": 8
       }
     ]
     "success": 1
@@ -151,12 +130,33 @@ app.get '/test', (req, res) ->
         if err?
           return res.json err
 
-        dogecoin.createRawTransaction inputs.inputs, outputs, (err, result) ->
+        dogecoin.createRawTransaction inputs.inputs, outputs, (err, rawTransaction) ->
 
           if err?
             return res.json err
 
-          res.send 200, "createrawtransaction #{JSON.stringify(inputs)} #{JSON.stringify(outputs)}\n#{result}"
+          dogecoin.signRawTransaction rawTransaction, [], [req.query.private], (err, result) ->
+
+            if err?
+              return res.json err
+
+            if not result.complete
+              return res.json {
+                error: "E_INCOMPLETE_TRANSACTION"
+              }
+
+            dogecoin.decodeRawTransaction result.hex, (err, decodedTransaction) ->
+
+              if err?
+                return res.json err
+
+              dogecoin.sendRawTransaction result.hex, (err, sendResult) ->
+
+                if err?
+                  return res.json err
+
+                # sendResult = true
+                res.send 200, "Transaction Sent\n\nResult: #{sendResult}\n\nTransaction: #{decodedTransaction}"
 
 
 app.get '/', (req, res) ->
