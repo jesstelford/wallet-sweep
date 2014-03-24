@@ -15,12 +15,14 @@ CHECK_TIMEOUT = 300
 KEEP_TRYING_TIMEOUT = 10000
 
 scanning = false
+videoAvailable = false
 localMediaStream = null
 lastPrivateKeyValue = null
 input = document.querySelectorAll('input#private_key')[0]
 video = document.querySelectorAll('.modal.qrcode video')[0]
 modal = document.querySelectorAll('.modal.qrcode')[0]
 image = document.querySelectorAll('.modal.qrcode img')[0]
+canvas = document.querySelectorAll('canvas#video_capture')[0]
 cancelVideo = document.querySelectorAll('.modal.qrcode button#cancel_video')[0]
 rescanVideo = document.querySelectorAll('.modal.qrcode button#rescan_video')[0]
 acceptVideo = document.querySelectorAll('.modal.qrcode button#accept_video')[0]
@@ -30,7 +32,6 @@ setup = (callback) ->
   if not navigator.getUserMedia
     return callback "getUserMedia not supported"
 
-  canvas = document.querySelector('canvas')
   ctx = canvas.getContext('2d')
   image.src = ""
   captureInterval = null
@@ -39,12 +40,18 @@ setup = (callback) ->
   getImageDataUri = ->
     # "image/webp" works in Chrome.
     # Other browsers will fall back to image/png.
-    imgdecodeFrame = canvas.toDataURL('image/webp')
+    imgdecodeFrame = canvas.toDataURL('image/png')
 
   decodeFrame = ->
     return unless localMediaStream
-    ctx.drawImage(video, 0, 0)
+    return unless videoAvailable
+    # Correctly resize canvas element to same as video resolution
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     imgdecodeFrame = getImageDataUri()
+
     zxing.decode(
       imgdecodeFrame
       (err, data) ->
@@ -78,6 +85,7 @@ setup = (callback) ->
     localMediaStream.stop()
     localMediaStream = null
     video.src = ""
+    videoAvailable = false
 
     classUtils.addClass video, "hidden"
     classUtils.removeClass image, "hidden"
@@ -89,9 +97,6 @@ setup = (callback) ->
     scanning = false
 
   videoLoaded = ->
-    # Correctly resize canvas element to same as video resolution
-    canvas.width = @videoWidth
-    canvas.height = @videoHeight
 
     # Note: We purposely set these timeouts up AFTER the call to `getUserMedia`
     # due to code execution being delayed while the browser waits for user to
@@ -153,6 +158,10 @@ beginScan = ->
   navigator.getUserMedia(
     {video: true}
     (stream) ->
+
+      video.addEventListener 'loadeddata', ->
+        videoAvailable = true
+
       video.src = window.URL.createObjectURL(stream)
       localMediaStream = stream
     (err) ->
