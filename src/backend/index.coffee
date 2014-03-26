@@ -11,8 +11,27 @@ CONFIRMATION_THRESHOLD = 6
 
 # TODO: Are fees required for low values? What about huge transactions (dust)?
 # What about huge values? Minimum fee? Transaction KiB? WAT!?
-NETWORK_FEE = 10000
-SCALE_FACTOR = 1e8
+MIN_BALANCE = 100000000
+NETWORK_FEE = 100000000
+
+COIN = 100000000
+CENT = 1000000
+
+MAX_MONEY = 10000000000 * COIN # DogeCoin: maximum of 100B coins (given some randomness), max transaction 10,000,000,000 for now
+
+# Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
+nMinTxFee = 100000000
+# Fees smaller than this (in satoshi) are considered zero fee (for relaying)
+nMinRelayT= 100000000
+
+# Dust Soft Limit, allowed with additional fee per output
+DUST_SOFT_LIMIT = 100000000
+# Dust Hard Limit, ignored as wallet inputs (mininput default)
+DUST_HARD_LIMIT = 1000000
+
+paytxfee = 0
+nTransactionFee = paytxfee
+nMinimumInputValue = DUST_HARD_LIMIT
 
 # Note that the directory tree is relative to the 'BACKEND_LIBDIR' Makefile
 # variable (`lib` by default) directory
@@ -70,25 +89,58 @@ getInputs = (transactions, next) ->
       return parseInt(transaction.value, 10)
   }
 
-applyNetworkFee = (totalCoins, next) ->
+allowFree = (prio) ->
+  return false
 
-  if totalCoins < NETWORK_FEE
-    # TODO: Is this possible? What's the minimum transaction possible?
-    return next {
-      error: "E_NOT_ENOUGH_FUNDS"
-      result:
-        required: NETWORK_FEE
-    }
+applyNetworkFee = (outputs, totalCoins, next) ->
 
-  # Deduct fee
-  totalCoins -= NETWORK_FEE
+  priority = 0
 
-  next null, totalCoins
+  getTransactionSize 'abc13', (err, nBytes) ->
+
+    # Application enforeced fee per kilobyte that goes to the network
+    payFee = nTransactionFee * (1 + nBytes / 1000)
+
+    baseFee = nMinTxFee
+    newBlockSize = 1 + nBytes
+    minFee = (1 + nBytes / 1000) * baseFee
+
+    if allowFree priority
+      # Transactions under 10K are free
+      if nBytes < 10000
+        minFee = 0
+
+    # Charge for processing dust outputs
+    minFee = _(outputs).reduce(
+      (minFee, output) ->
+        return minFee + if output < DUST_SOFT_LIMIT baseFee else 0
+      minFee
+    )
+
+    # Out of range value
+    if minFee < 0 or minFee > MAX_MONEY
+      minFee = MAX_MONEY
+
+    # Pick the highest of the two fees
+    fee = Math.max minFee, payFee
+
+    # Ruh-roh!
+    if totalCoins < fee
+      return next {
+        error: "E_CANNOT_AFFORD_FEE"
+        result:
+          required: MIN_BALANCE
+      }
+
+    # Deduct fee
+    totalCoins -= fee
+
+    next null, totalCoins
 
 getOutputs = (toAddress, totalCoins, next) ->
 
   # Convert to decimal for JSON RPC
-  totalCoins = totalCoins / SCALE_FACTOR
+  totalCoins = totalCoins / COIN
 
   outputs = {}
   outputs[toAddress] = totalCoins
@@ -125,6 +177,8 @@ app.get '/test', (req, res) ->
     "success": 1
   }
 
+  # TODO: Check destination address valid
+
   if not result?.success?
     # TODO: Better error message / response
     res.send 200, "Couldn't gather address transactions"
@@ -133,6 +187,14 @@ app.get '/test', (req, res) ->
 
     if err?
       return res.json err
+
+    # Sanity check
+    if inputs.err < 0
+      return res.json {
+        error: "E_NOT_ENOUGH_FUNDS"
+        result:
+          required: MIN_BALANCE
+      }
 
     applyNetworkFee inputs.totalCoins, (err, totalCoins) ->
 
@@ -155,6 +217,7 @@ app.get '/test', (req, res) ->
               return res.json err
 
             if not result.complete
+              console.log result
               return res.json {
                 error: "E_INCOMPLETE_TRANSACTION"
               }
@@ -164,10 +227,14 @@ app.get '/test', (req, res) ->
               if err?
                 return res.json err
 
+              console.log "Final Transaction:", decodedTransaction
+
               dogecoin.sendRawTransaction result.hex, (err, sendResult) ->
 
                 if err?
                   return res.json err
+
+                console.log "Send Result:", sendResult
 
                 # sendResult = true
                 res.send 200, "Transaction Sent\n\nResult: #{sendResult}\n\nTransaction: #{decodedTransaction}"
