@@ -95,6 +95,20 @@ getOutputs = (toAddress, totalCoins, next) ->
 
   next null, outputs
 
+getTransactionSize = (rawTransactionHex, next) ->
+
+  if typeof rawTransactionHex isnt "string" or rawTransactionHex.length is 0
+    return next {
+      error: "E_TRANSACTION_FORMAT"
+      result: "Raw Transaction Hex's must be represented by a hex encode string."
+    }
+  # rawTransactionHex is a hex-encoded string
+  # Since each character in a hex encoded string represents 16 bits, that means
+  # each character is worth 2 bytes (a byte being 8 bits).
+  # See:
+  # https://bitcoin.stackexchange.com/questions/13360/how-are-transaction-fees-calculated-in-raw-transactions?lq=1#comment17159_13366
+  # and ./dogecoind help getrawtransaction
+  next null, rawTransactionHex.length * 2
 
 app.get '/test', (req, res) ->
 
