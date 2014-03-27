@@ -6,14 +6,11 @@ dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 
 require './templates/index'
 
-# TODO: Why 6?
-CONFIRMATION_THRESHOLD = 6
+# Why 3? Arbitrary number to stop small attacks on the network. See
+# https://en.bitcoin.it/wiki/Confirmation
+CONFIRMATION_THRESHOLD = 3
 
-# TODO: Are fees required for low values? What about huge transactions (dust)?
-# What about huge values? Minimum fee? Transaction KiB? WAT!?
-MIN_BALANCE = 100000000
-NETWORK_FEE = 100000000
-
+# How many satoshi's are considered "1 coin"
 COIN = 100000000
 CENT = 1000000
 
@@ -21,17 +18,11 @@ MAX_MONEY = 10000000000 * COIN # DogeCoin: maximum of 100B coins (given some ran
 
 # Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
 nMinTxFee = 100000000
-# Fees smaller than this (in satoshi) are considered zero fee (for relaying)
-nMinRelayT= 100000000
 
 # Dust Soft Limit, allowed with additional fee per output
 DUST_SOFT_LIMIT = 100000000
-# Dust Hard Limit, ignored as wallet inputs (mininput default)
-DUST_HARD_LIMIT = 1000000
 
-paytxfee = 0
-nTransactionFee = paytxfee
-nMinimumInputValue = DUST_HARD_LIMIT
+applicationSpecificFee = 0
 
 # Note that the directory tree is relative to the 'BACKEND_LIBDIR' Makefile
 # variable (`lib` by default) directory
@@ -69,6 +60,16 @@ addUp = (objs, getValue) ->
     0
   )
 
+getPriority = (transactions, getValue) ->
+  return _(transactions).reduce(
+    (priority, transaction) ->
+      return priority + getValue(transaction) * getChainDepth(transaction)
+    0
+  )
+
+getChainDepth = (transaction) ->
+  return transaction.confirmations
+
 # @param next = (`err`, `result`) ->
 getInputs = (transactions, next) ->
 
@@ -83,37 +84,45 @@ getInputs = (transactions, next) ->
         unconfirmed: unconfirmedTransactions
     }
 
+  valueExtraction = (transaction) ->
+    return parseInt(transaction.value, 10)
+
   next null, {
     inputs: buildRPCTransactionInputs transactions
-    totalCoins: addUp transactions, (transaction) ->
-      return parseInt(transaction.value, 10)
+    totalCoins: addUp transactions, valueExtraction
+    priority: getPriority transactions, valueExtraction
   }
 
 allowFree = (prio) ->
-  return false
+  # Large (in bytes) low-priority (new, small-coin) transactions need a fee.
+  # DogeCoin: 1440 blocks found a day. Priority cutoff is 100 dogecoin day / 250 bytes.
+  return prio > (100 * COIN * 1440 / 250)
 
-applyNetworkFee = (outputs, totalCoins, next) ->
+getFeeFromSize = (bytes, baseFee) ->
+  return baseFee * (1 + size / 1000)
 
-  priority = 0
+applyNetworkFee = (priority, outputs, totalCoins, next) ->
 
   getTransactionSize 'abc13', (err, nBytes) ->
 
+    priority /= nBytes
+
     # Application enforeced fee per kilobyte that goes to the network
-    payFee = nTransactionFee * (1 + nBytes / 1000)
+    payFee = getFeeFromSize(nBytes, applicationSpecificFee)
 
     baseFee = nMinTxFee
     newBlockSize = 1 + nBytes
-    minFee = (1 + nBytes / 1000) * baseFee
+    minFee = getFeeFromSize(nBytes, baseFee)
 
     if allowFree priority
-      # Transactions under 10K are free
+      # Transactions under 10K with high enough priority are free
       if nBytes < 10000
         minFee = 0
 
     # Charge for processing dust outputs
     minFee = _(outputs).reduce(
       (minFee, output) ->
-        return minFee + if output < DUST_SOFT_LIMIT baseFee else 0
+        return minFee + if output < DUST_SOFT_LIMIT then baseFee else 0
       minFee
     )
 
@@ -129,7 +138,7 @@ applyNetworkFee = (outputs, totalCoins, next) ->
       return next {
         error: "E_CANNOT_AFFORD_FEE"
         result:
-          required: MIN_BALANCE
+          required: fee
       }
 
     # Deduct fee
@@ -189,11 +198,11 @@ app.get '/test', (req, res) ->
       return res.json err
 
     # Sanity check
-    if inputs.err < 0
+    if inputs.totalCoins < 0
       return res.json {
         error: "E_NOT_ENOUGH_FUNDS"
         result:
-          required: MIN_BALANCE
+          required: 0
       }
 
     applyNetworkFee inputs.totalCoins, (err, totalCoins) ->
