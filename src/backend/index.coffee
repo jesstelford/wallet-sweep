@@ -1,5 +1,6 @@
 h5bp = require 'h5bp'
 path = require 'path'
+async = require 'async'
 _ = require 'underscore'
 Handlebars = require 'handlebars'
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
@@ -99,11 +100,13 @@ allowFree = (prio) ->
   return prio > (100 * COIN * 1440 / 250)
 
 getFeeFromSize = (bytes, baseFee) ->
-  return baseFee * (1 + size / 1000)
+  return baseFee * (1 + bytes / 1000)
 
-applyNetworkFee = (priority, outputs, totalCoins, next) ->
+applyNetworkFee = (inputs, outputs, rawTx, next) ->
 
-  getTransactionSize 'abc13', (err, nBytes) ->
+  priority = inputs.priority
+
+  getTransactionSize rawTx, (err, nBytes) ->
 
     priority /= nBytes
 
@@ -134,7 +137,7 @@ applyNetworkFee = (priority, outputs, totalCoins, next) ->
     fee = Math.max minFee, payFee
 
     # Ruh-roh!
-    if totalCoins < fee
+    if inputs.totalCoins < fee
       return next {
         error: "E_CANNOT_AFFORD_FEE"
         result:
@@ -142,9 +145,7 @@ applyNetworkFee = (priority, outputs, totalCoins, next) ->
       }
 
     # Deduct fee
-    totalCoins -= fee
-
-    next null, totalCoins
+    next null, inputs.totalCoins - fee
 
 getOutputs = (toAddress, totalCoins, next) ->
 
@@ -171,16 +172,25 @@ getTransactionSize = (rawTransactionHex, next) ->
   # and ./dogecoind help getrawtransaction
   next null, rawTransactionHex.length * 2
 
+
+createPassthroughCallback = ->
+  # Pass through the arguments
+  # Note: passing '_' flags it as a pass-through, so the first argument to the
+  # new `next` method will go into that place, then following arguments will go
+  # after the partially filled spots that `arguments` is taking
+  args = Array.prototype.slice.call arguments
+  return _.partial.apply null, [args.pop(), _].concat args
+
 app.get '/test', (req, res) ->
 
   result = {
     "unspent_outputs": [
       {
-        "tx_hash": "abe81569c15384e6d5586d38a5d28634894f586680e65d7114c094abcc9eb56e"
+        "tx_hash": "e004343a9e74db3b390c35fd921401756108cabad38aeb5a23d23ed4d818d468"
         "tx_output_n": 1
-        "script": "76a914b153a719b03c52ed8f07856e869304e4bd3732fe88ac"
-        "value": "1000000000000"
-        "confirmations": 8
+        "script": "76a914a3e7e00a4158baf2f3bbd0fe108f2b464c0b4e1488ac"
+        "value": "#{10 * COIN}"
+        "confirmations": 7
       }
     ]
     "success": 1
@@ -192,61 +202,110 @@ app.get '/test', (req, res) ->
     # TODO: Better error message / response
     res.send 200, "Couldn't gather address transactions"
 
-  getInputs result.unspent_outputs, (err, inputs) ->
+  async.waterfall [
+
+    (next) =>
+
+      getInputs result.unspent_outputs, next
+
+    (inputs) =>
+
+      next = Array.prototype.slice.call(arguments).pop()
+
+      # Sanity check
+      if inputs.totalCoins < 0
+        return next {
+          error: "E_NOT_ENOUGH_FUNDS"
+          result:
+            required: 0
+        }
+
+      next null, inputs
+
+    (inputs) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      getOutputs req.query.address, inputs.totalCoins, next
+
+    (inputs, outputs) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      dogecoin.createRawTransaction inputs.inputs, outputs, next
+
+    (inputs, outputs, rawTransaction) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      applyNetworkFee inputs, outputs, rawTransaction, next
+
+    (inputs, outputs, rawTransaction, totalWithFee) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      # Now that we have a total including a fee, we need to recalculat
+      getOutputs req.query.address, totalWithFee, next
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      # And recalculate the raw transaction
+      dogecoin.createRawTransaction inputs.inputs, outputsWithFee, next
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      if rawTransaction.length isnt rawTransactionWithFee.length
+        # The transaction size *shouldn't* change since we're only modifying a
+        # single number by regenerating the outputs. HOWEVER, this is here just
+        # in case
+        return next {
+          error: "E_TRANSACTION_SIZE_CHANGED"
+          result:
+            was: rawTransaction
+            now: rawTransactionWithFee
+        }
+
+      next null
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      dogecoin.signRawTransaction rawTransactionWithFee, [], [req.query.private], next
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      if not signedTransaction.complete
+        return res.json {
+          error: "E_INCOMPLETE_TRANSACTION"
+          result:
+            raw_transaction: rawTransactionWithFee
+        }
+
+      # next null, rawTransactionWithFee
+      next null
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction) =>
+      next = createPassthroughCallback.apply null, arguments
+
+      dogecoin.sendRawTransaction signedTransaction.hex, next
+
+    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction, sentRawTransaction, next) =>
+      # next = createPassthroughCallback.apply null, arguments
+
+      dogecoin.decodeRawTransaction signedTransaction.hex, (err, decodedTransaction) ->
+        next err, signedTransaction, decodedTransaction
+
+    (signedTransaction, decodedTransaction, next) =>
+      console.log "SUCCESS:", JSON.stringify(signedTransaction), JSON.stringify(decodedTransaction)
+
+      # sendResult = true
+      res.send 200, "Transaction Sent\n\nResult: #{JSON.stringify signedTransaction}\n\nTransaction: #{JSON.stringify decodedTransaction}"
+      next null
+
+  ], (err) =>
 
     if err?
+      console.log "ERROR:", err
       return res.json err
-
-    # Sanity check
-    if inputs.totalCoins < 0
-      return res.json {
-        error: "E_NOT_ENOUGH_FUNDS"
-        result:
-          required: 0
-      }
-
-    applyNetworkFee inputs.totalCoins, (err, totalCoins) ->
-
-      if err?
-        return res.json err
-
-      getOutputs req.query.address, totalCoins, (err, outputs) ->
-
-        if err?
-          return res.json err
-
-        dogecoin.createRawTransaction inputs.inputs, outputs, (err, rawTransaction) ->
-
-          if err?
-            return res.json err
-
-          dogecoin.signRawTransaction rawTransaction, [], [req.query.private], (err, result) ->
-
-            if err?
-              return res.json err
-
-            if not result.complete
-              console.log result
-              return res.json {
-                error: "E_INCOMPLETE_TRANSACTION"
-              }
-
-            dogecoin.decodeRawTransaction result.hex, (err, decodedTransaction) ->
-
-              if err?
-                return res.json err
-
-              console.log "Final Transaction:", decodedTransaction
-
-              dogecoin.sendRawTransaction result.hex, (err, sendResult) ->
-
-                if err?
-                  return res.json err
-
-                console.log "Send Result:", sendResult
-
-                # sendResult = true
-                res.send 200, "Transaction Sent\n\nResult: #{sendResult}\n\nTransaction: #{decodedTransaction}"
 
 
 app.get '/', (req, res) ->
