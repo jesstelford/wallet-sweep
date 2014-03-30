@@ -239,7 +239,7 @@ getValidAddress = (address, next) ->
 
     return next(err) if err?
 
-    if not result.isvalid?
+    if not result.isvalid
       return next {
         error: "E_NOT_VALID_ADDRESS"
         result: result
