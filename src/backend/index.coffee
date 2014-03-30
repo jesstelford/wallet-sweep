@@ -215,13 +215,15 @@ getValidAddress = (address, next) ->
       error: "E_NOT_ADDRESS"
     }
 
-  if address.indexOf 'D' isnt 0
+  if address.indexOf 'n' isnt 0
     # Maybe it's a private key?
     # TODO: What does a private start with?
-    if address.indexOf 'S' isnt 0
+    if address.indexOf 'c' isnt 0
       # dogecoin addresses start with a 'D'
       return next {
         error: "E_NOT_DOGECOIN_ADDRESS"
+        result:
+          address: address
       }
     else
       validate = (privateKey, next) =>
@@ -239,6 +241,7 @@ getValidAddress = (address, next) ->
     if not result.isvalid?
       return next {
         error: "E_NOT_VALID_ADDRESS"
+        result: result
       }
 
     next null, result.address
