@@ -232,7 +232,8 @@ getValidAddress = (address, next) ->
           dogecoin.validateaddress result, next
 
   else
-    validate = dogecoin.validateaddress
+    validate = (address, next) =>
+      dogecoin.validateaddress address, next
 
   validate address, (err, result) ->
 
