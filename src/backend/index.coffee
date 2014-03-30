@@ -249,11 +249,8 @@ getValidAddress = (address, next) ->
 
 getAddressFromPrivateKey = (privateKey, next) ->
 
-  dogecoin.dumpprivkey privateKey, (err, address) ->
-
-    return next(err) if err?
-
-    next null, address
+  # TODO: This needs to be coded some how
+  next null, "ngMxtXQVsdezWYzQuRFdbtDyc1R4Fw7AES"
 
 gatherFromInfo = (privateKey, next) ->
 
