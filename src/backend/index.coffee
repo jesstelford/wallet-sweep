@@ -355,7 +355,7 @@ app.get '/test', (req, res) ->
         return res.json {
           error: "E_INCOMPLETE_TRANSACTION"
           result:
-            raw_transaction: rawTransactionWithFee
+            signed_transaction: signedTransaction
         }
 
       next null, signedTransaction
