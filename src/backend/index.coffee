@@ -206,7 +206,8 @@ getUnspentOutputs = (address, next) ->
 
 getValidAddress = (address, next) ->
 
-  address = address.match(/^(?dogecoin:(\/){0,2})?([a-f0-1]+)/i)[0]
+  # Try to extract just the address part
+  address = address.match(/^(?:dogecoin:\/{0,2})?([a-z0-9]+)/i)[1]
 
   if not address?
     # Not a valid dogecoin address
