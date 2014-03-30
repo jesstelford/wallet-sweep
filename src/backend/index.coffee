@@ -312,26 +312,21 @@ buildTransaction = (inputs, toAddress, next) ->
       nextAsync = createPassthroughCallback.apply null, arguments
       dogecoin.createRawTransaction inputs.inputs, outputsWithFee, nextAsync
 
-    (outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
-
-      if rawTransaction.length isnt rawTransactionWithFee.length
-        # The transaction size *shouldn't* change since we're only modifying a
-        # single number by regenerating the outputs. HOWEVER, this is here just
-        # in case
-        return next {
-          error: "E_TRANSACTION_SIZE_CHANGED"
-          result:
-            was: rawTransaction
-            now: rawTransactionWithFee
-        }
-
-      next = createPassthroughCallback.apply null, arguments
-      next null
-
   ], (err, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
 
     return next(err) if err?
-    next null, {total, outputs}
+    if rawTransaction.length isnt rawTransactionWithFee.length
+      # The transaction size *shouldn't* change since we're only modifying a
+      # single number by regenerating the outputs. HOWEVER, this is here just
+      # in case
+      return next {
+        error: "E_TRANSACTION_SIZE_CHANGED"
+        result:
+          was: rawTransaction
+          now: rawTransactionWithFee
+      }
+
+    next null, rawTransactionWithFee
 
 app.get '/test', (req, res) ->
 
