@@ -181,7 +181,7 @@ createPassthroughCallback = ->
   args = Array.prototype.slice.call arguments
   return _.partial.apply null, [args.pop(), _].concat args
 
-app.get '/test', (req, res) ->
+getUnspentOutputs = (address, next) ->
 
   result = {
     "unspent_outputs": [
@@ -196,61 +196,121 @@ app.get '/test', (req, res) ->
     "success": 1
   }
 
-  # TODO: Check destination address valid
-
   if not result?.success?
-    # TODO: Better error message / response
-    res.send 200, "Couldn't gather address transactions"
+    return next {
+      error: "E_UNKNOWN_AMOUNT"
+    }
+
+  next null, result
+
+
+getValidAddress = (address, next) ->
+
+  address = address.match(/^(?dogecoin:(\/){0,2})?([a-f0-1]+)/i)[0]
+
+  if not address?
+    # Not a valid dogecoin address
+    return next {
+      error: "E_NOT_ADDRESS"
+    }
+
+  if address.indexOf 'D' isnt 0
+    # Maybe it's a private key?
+    # TODO: What does a private start with?
+    if address.indexOf 'S' isnt 0
+      # dogecoin addresses start with a 'D'
+      return next {
+        error: "E_NOT_DOGECOIN_ADDRESS"
+      }
+    else
+      validate = (privateKey, next) =>
+        getAddressFromPrivateKey privateKey, (err, result) =>
+          return next(err) if err?
+          dogecoin.validateaddress result, next
+
+  else
+    validate = dogecoin.validateaddress
+
+  validate address, (err, result) ->
+
+    return next(err) if err?
+
+    if not result.isvalid?
+      return next {
+        error: "E_NOT_VALID_ADDRESS"
+      }
+
+    next null, result.address
+
+getAddressFromPrivateKey = (privateKey, next) ->
+
+  dogecoin.dumpprivkey privateKey, (err, address) ->
+
+    return next(err) if err?
+
+    next null, address
+
+gatherFromInfo = (privateKey, next) ->
 
   async.waterfall [
 
-    (next) =>
+    (nextAsync) =>
+      getValidAddress privateKey, nextAsync
 
-      getInputs result.unspent_outputs, next
+    (address) =>
+      nextAsync = createPassthroughCallback.apply null, arguments
+      getUnspentOutputs address, nextAsync
 
-    (inputs) =>
+    (address, unspentOutputs) =>
+      nextAsync = createPassthroughCallback.apply null, arguments
+      getInputs unspentOutputs.unspent_outputs, nextAsync
 
-      next = Array.prototype.slice.call(arguments).pop()
+    (address, unspentOutputs, inputs) =>
+
+      nextAsync = Array.prototype.slice.call(arguments).pop()
 
       # Sanity check
       if inputs.totalCoins < 0
-        return next {
+        return nextAsync {
           error: "E_NOT_ENOUGH_FUNDS"
           result:
             required: 0
         }
 
-      next null, inputs
+      nextAsync null, address, unspentOutputs, inputs
 
-    (inputs) =>
-      next = createPassthroughCallback.apply null, arguments
+  ], (err, address, unspentOutputs, inputs) ->
 
-      getOutputs req.query.address, inputs.totalCoins, next
+    return next(err) if err?
+    next null, {address, unspentOutputs, inputs}
 
-    (inputs, outputs) =>
-      next = createPassthroughCallback.apply null, arguments
 
-      dogecoin.createRawTransaction inputs.inputs, outputs, next
+buildTransaction = (inputs, toAddress, next) ->
 
-    (inputs, outputs, rawTransaction) =>
-      next = createPassthroughCallback.apply null, arguments
+  async.waterfall [
 
-      applyNetworkFee inputs, outputs, rawTransaction, next
+    (nextAsync) =>
+      getOutputs toAddress, inputs.totalCoins, nextAsync
 
-    (inputs, outputs, rawTransaction, totalWithFee) =>
-      next = createPassthroughCallback.apply null, arguments
+    (outputs) =>
+      nextAsync = createPassthroughCallback.apply null, arguments
+      dogecoin.createRawTransaction inputs.inputs, outputs, nextAsync
 
+    (outputs, rawTransaction) =>
+      nextAsync = createPassthroughCallback.apply null, arguments
+      applyNetworkFee inputs, outputs, rawTransaction, nextAsync
+
+    (outputs, rawTransaction, totalWithFee) =>
       # Now that we have a total including a fee, we need to recalculat
-      getOutputs req.query.address, totalWithFee, next
+      nextAsync = createPassthroughCallback.apply null, arguments
+      getOutputs toAddress, totalWithFee, nextAsync
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee) =>
-      next = createPassthroughCallback.apply null, arguments
-
+    (outputs, rawTransaction, totalWithFee, outputsWithFee) =>
       # And recalculate the raw transaction
-      dogecoin.createRawTransaction inputs.inputs, outputsWithFee, next
+      nextAsync = createPassthroughCallback.apply null, arguments
+      dogecoin.createRawTransaction inputs.inputs, outputsWithFee, nextAsync
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
-      next = createPassthroughCallback.apply null, arguments
+    (outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
 
       if rawTransaction.length isnt rawTransactionWithFee.length
         # The transaction size *shouldn't* change since we're only modifying a
@@ -263,15 +323,36 @@ app.get '/test', (req, res) ->
             now: rawTransactionWithFee
         }
 
+      next = createPassthroughCallback.apply null, arguments
       next null
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
-      next = createPassthroughCallback.apply null, arguments
+  ], (err, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
 
-      dogecoin.signRawTransaction rawTransactionWithFee, [], [req.query.private], next
+    return next(err) if err?
+    next null, {total, outputs}
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction) =>
-      next = createPassthroughCallback.apply null, arguments
+app.get '/test', (req, res) ->
+
+  privateKey = req.query.private
+
+  async.waterfall [
+
+    (next) =>
+
+      gatherFromInfo privateKey, next
+
+    (fromInfo, next) =>
+      getValidAddress req.query.address, (err, address) =>
+        next err, fromInfo.inputs, address
+
+    (inputs, toAddress, next) =>
+
+      buildTransaction inputs, toAddress, next
+
+    (rawTransaction, next) =>
+      dogecoin.signRawTransaction rawTransaction, [], [privateKey], next
+
+    (signedTransaction, next) =>
 
       if not signedTransaction.complete
         return res.json {
@@ -280,32 +361,26 @@ app.get '/test', (req, res) ->
             raw_transaction: rawTransactionWithFee
         }
 
-      # next null, rawTransactionWithFee
-      next null
+      next null, signedTransaction
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction) =>
+    (signedTransaction, next) =>
       next = createPassthroughCallback.apply null, arguments
+      dogecoin.sendRawTransaction signedTransaction.hex, (err, sendResult) =>
+        next err, signedTransaction, sendResult
 
-      dogecoin.sendRawTransaction signedTransaction.hex, next
+    (signedTransaction, sendResult, next) =>
 
-    (inputs, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee, signedTransaction, sentRawTransaction, next) =>
-      # next = createPassthroughCallback.apply null, arguments
+      dogecoin.decodeRawTransaction signedTransaction.hex, next
 
-      dogecoin.decodeRawTransaction signedTransaction.hex, (err, decodedTransaction) ->
-        next err, signedTransaction, decodedTransaction
-
-    (signedTransaction, decodedTransaction, next) =>
-      console.log "SUCCESS:", JSON.stringify(signedTransaction), JSON.stringify(decodedTransaction)
-
-      # sendResult = true
-      res.send 200, "Transaction Sent\n\nResult: #{JSON.stringify signedTransaction}\n\nTransaction: #{JSON.stringify decodedTransaction}"
-      next null
-
-  ], (err) =>
+  ], (err, decodedTransaction) =>
 
     if err?
       console.log "ERROR:", err
       return res.json err
+
+    console.log "SUCCESS:", JSON.stringify(decodedTransaction)
+
+    res.send 200, "Transaction Sent\n\nTransaction: #{JSON.stringify decodedTransaction}"
 
 
 app.get '/', (req, res) ->
