@@ -215,10 +215,10 @@ getValidAddress = (address, next) ->
       error: "E_NOT_ADDRESS"
     }
 
-  if address.indexOf 'n' isnt 0
+  if address.indexOf('n') isnt 0
     # Maybe it's a private key?
     # TODO: What does a private start with?
-    if address.indexOf 'c' isnt 0
+    if address.indexOf('c') isnt 0
       # dogecoin addresses start with a 'D'
       return next {
         error: "E_NOT_DOGECOIN_ADDRESS"
