@@ -1,7 +1,8 @@
+_ = require 'underscore'
 h5bp = require 'h5bp'
 path = require 'path'
 async = require 'async'
-_ = require 'underscore'
+CoinKey = require 'coinkey'
 Handlebars = require 'handlebars'
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 
@@ -249,8 +250,16 @@ getValidAddress = (address, next) ->
 
 getAddressFromPrivateKey = (privateKey, next) ->
 
-  # TODO: This needs to be coded some how
-  next null, "ngMxtXQVsdezWYzQuRFdbtDyc1R4Fw7AES"
+  ck = CoinKey.fromWif privateKey
+
+  if ck.versions.public isnt ci('DOGE').versions.public
+    return next {
+      error: "E_NOT_DOGECOIN_PRIVATE_KEY"
+      result:
+        private: privateKey
+    }
+
+  next null, ck.publicAddress
 
 gatherFromInfo = (privateKey, next) ->
 
