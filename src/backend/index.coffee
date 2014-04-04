@@ -3,6 +3,8 @@ h5bp = require 'h5bp'
 path = require 'path'
 async = require 'async'
 CoinKey = require 'coinkey'
+coininfo = require 'coininfo'
+coinstring = require 'coinstring'
 Handlebars = require 'handlebars'
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 
@@ -101,7 +103,7 @@ allowFree = (prio) ->
   return prio > (100 * COIN * 1440 / 250)
 
 getFeeFromSize = (bytes, baseFee) ->
-  return baseFee * (1 + bytes / 1000)
+  return baseFee * (1 + Math.floor(bytes / 1000))
 
 applyNetworkFee = (inputs, outputs, rawTx, next) ->
 
