@@ -218,25 +218,35 @@ getValidAddress = (address, next) ->
       error: "E_NOT_ADDRESS"
     }
 
-  if address.indexOf('n') isnt 0
-    # Maybe it's a private key?
-    # TODO: What does a private start with?
-    if address.indexOf('c') isnt 0
-      # dogecoin addresses start with a 'D'
-      return next {
+  publicKeyValidator = coinstring.validate coininfo('DOGE').versions.public
+  privateKeyValidator = coinstring.validate coininfo('DOGE').versions.private
+
+  validate = (address, nextValidate) ->
+
+    if process.env.NODE_ENV is 'development'
+      if address.indexOf('c') is 0
+        # assume it's a private key
+        return getAddressFromPrivateKey address, (err, result) =>
+          return nextValidate err, {address: result, isvalid: true}
+      else
+        return nextValidate null, {address, isvalid: true}
+
+    if publicKeyValidator address
+
+      return nextValidate null, {address, isvalid: true}
+
+    else if privateKeyValidator address
+
+      getAddressFromPrivateKey address, (err, result) =>
+        return nextValidate err, {address: result, isvalid: true}
+
+    else
+      # Nope.
+      return nextValidate {
         error: "E_NOT_DOGECOIN_ADDRESS"
         result:
           address: address
       }
-    else
-      validate = (privateKey, next) =>
-        getAddressFromPrivateKey privateKey, (err, result) =>
-          return next(err) if err?
-          dogecoin.validateaddress result, next
-
-  else
-    validate = (address, next) =>
-      dogecoin.validateaddress address, next
 
   validate address, (err, result) ->
 
@@ -254,7 +264,10 @@ getAddressFromPrivateKey = (privateKey, next) ->
 
   ck = CoinKey.fromWif privateKey
 
-  if ck.versions.public isnt ci('DOGE').versions.public
+  if process.env.NODE_ENV is 'development'
+    return next null, ck.publicAddress
+
+  if ck.versions.public isnt coininfo('DOGE').versions.public
     return next {
       error: "E_NOT_DOGECOIN_PRIVATE_KEY"
       result:
