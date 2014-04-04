@@ -386,8 +386,7 @@ app.get '/test', (req, res) ->
 
     (signedTransaction, next) =>
       next = createPassthroughCallback.apply null, arguments
-      dogecoin.sendRawTransaction signedTransaction.hex, (err, sendResult) =>
-        next err, signedTransaction, sendResult
+      dogecoin.sendRawTransaction signedTransaction.hex, next
 
     (signedTransaction, sendResult, next) =>
 
