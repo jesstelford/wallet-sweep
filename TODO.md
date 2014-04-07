@@ -1,6 +1,5 @@
 # TODO
 
-* Rename `dogecoin` module to `dogecoind`
 * Accept the POST from client to backend
 * Figure out TestNet address prefixes
 * Show error messages to user

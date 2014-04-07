@@ -4,13 +4,13 @@ path = require 'path'
 async = require 'async'
 Handlebars = require 'handlebars'
 transact = require "#{__dirname}/transact"
-dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
+dogecoind = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 createPassthroughCallback = require "#{__dirname}/passthrough"
 
 # Fix fairly useless un-bound methods of node-dogecoin
 # This allows passing the dogecoin.XX methods around for later execution within
 # different contexts
-_.bindAll.apply null, [dogecoin].concat _.functions(dogecoin)
+_.bindAll.apply null, [dogecoind].concat _.functions(dogecoind)
 
 # Inject the template into Handlebars.templates["index"]
 require "#{__dirname}/templates/index"
@@ -41,10 +41,10 @@ app.get '/test', (req, res) ->
 
     (inputs, toAddress, next) =>
 
-      transact.buildTransaction dogecoin.createRawTransaction, inputs, toAddress, next
+      transact.buildTransaction dogecoind.createRawTransaction, inputs, toAddress, next
 
     (rawTransaction, next) =>
-      dogecoin.signRawTransaction rawTransaction, [], [privateKey], next
+      dogecoind.signRawTransaction rawTransaction, [], [privateKey], next
 
     (signedTransaction, next) =>
 
@@ -59,11 +59,11 @@ app.get '/test', (req, res) ->
 
     (signedTransaction, next) =>
       next = createPassthroughCallback.apply null, arguments
-      dogecoin.sendRawTransaction signedTransaction.hex, next
+      dogecoind.sendRawTransaction signedTransaction.hex, next
 
     (signedTransaction, sendResult, next) =>
 
-      dogecoin.decodeRawTransaction signedTransaction.hex, next
+      dogecoind.decodeRawTransaction signedTransaction.hex, next
 
   ], (err, decodedTransaction) =>
 
