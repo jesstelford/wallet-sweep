@@ -73,7 +73,7 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
     console.log "SUCCESS:", JSON.stringify(decodedTransaction)
 
-    res.send 200, "Transaction Sent\n\nTransaction: #{JSON.stringify decodedTransaction}"
+    res.json 200, {success: true, result: decodedTransaction}
 
 
 app.get '/', (req, res) ->
