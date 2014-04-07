@@ -128,7 +128,8 @@ applyNetworkFee = (inputs, outputs, rawTx, next) ->
     # Charge for processing dust outputs
     minFee = _(outputs).reduce(
       (minFee, output) ->
-        return minFee + if (output * COIN) < DUST_SOFT_LIMIT then baseFee else 0
+        increase = if (output * COIN) < DUST_SOFT_LIMIT then baseFee else 0
+        return minFee + increase
       minFee
     )
 
