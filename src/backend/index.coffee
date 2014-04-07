@@ -10,9 +10,12 @@ dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 
 require './templates/index'
 
-# Why 3? Arbitrary number to stop small attacks on the network. See
+# Why 5? Arbitrary number to stop small attacks on the network. See
 # https://en.bitcoin.it/wiki/Confirmation
-CONFIRMATION_THRESHOLD = 3
+CONFIRMATION_THRESHOLD = 5
+
+# Dogecoin has 60 second block confirmation targets
+CONFIRMATION_TIME_MS = 60000
 
 # How many satoshi's are considered "1 coin"
 COIN = 100000000
@@ -42,13 +45,17 @@ getUnconfirmedTransactions = (transactions) ->
   return _(transactions).filter (transaction) ->
     return transaction.confirmations < CONFIRMATION_THRESHOLD
 
-buildUnconfirmedErrors = (transactions) ->
-  return _(transactions).reduce(
-    (message, transaction) ->
-      confirmationsLeft = CONFIRMATION_THRESHOLD - transaction.confirmations
-      return "#{message}\n #{confirmationsLeft} confirmations left for txn [#{transaction.tx_hash}]"
-    "The following transactions are too new:"
-  )
+buildUnconfirmedError = (transactions) ->
+  leastConfirmed = _(transactions).min (transaction) ->
+    return transaction.confirmations
+
+  return {
+    error: "E_UNCONFIRMED_TRANSACTION"
+    result:
+      required: CONFIRMATION_THRESHOLD
+      existing: leastConfirmed.confirmations
+      confirmation_time: CONFIRMATION_TIME_MS
+  }
 
 buildRPCTransactionInputs = (transactions) ->
   return _(transactions).map (transaction) ->
@@ -80,13 +87,7 @@ getInputs = (transactions, next) ->
   unconfirmedTransactions = getUnconfirmedTransactions transactions
 
   if unconfirmedTransactions.length > 0
-
-    return next {
-      error: "E_UNCONFIRMED_TRANSACTIONS"
-      result:
-        threshold: CONFIRMATION_THRESHOLD
-        unconfirmed: unconfirmedTransactions
-    }
+    return next buildUnconfirmedError unconfirmedTransactions
 
   valueExtraction = (transaction) ->
     return parseInt(transaction.value, 10)
