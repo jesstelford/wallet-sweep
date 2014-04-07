@@ -1,9 +1,9 @@
 # TODO
 
-* Accept the POST from client to backend
+* Success Modal on client
+* Show error messages to user
 * Client side address validations
 * Figure out TestNet address prefixes
-* Show error messages to user
 * Test on mobile devices
 * Test on live network.
 * Register for SSL security
