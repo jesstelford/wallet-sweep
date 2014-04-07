@@ -1,6 +1,11 @@
 # TODO
 
 * Move all calculations to external file / module
+* Remove dogecoin dependancy from external file
+  * Since can't pass dogecoin methods directly, do something like:
+  ```coffeescript
+  transact.buildTransaction (-> dogecoin.createRawTransaction.apply dogecoin, arguments), inputs, to, next
+  ```
 * Figure out TestNet address prefixes
 * Accept the POST from client to backend
 * Register for SSL security
