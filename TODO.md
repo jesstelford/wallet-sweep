@@ -17,6 +17,7 @@
   * Ask user's confirmation of spending fees
   * Re-submit information and re-send transaction
 * Test on live network.
+* Rate limit requests
 * Support BIP32 encoded private keys
 * Test on mobile devices
 * Allow selecting which camera to use on mobile
