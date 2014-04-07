@@ -221,6 +221,6 @@ formSubmit = ->
 setup (err) ->
 
   return console.log(err) if err?
-  document.querySelector('button#scan_qrcode').addEventListener 'click', beginScan
+  document.querySelector('button#scan_qrcode').onclick = beginScan
 
   document.getElementById('user_input').onsubmit = formSubmit
