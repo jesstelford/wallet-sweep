@@ -4,6 +4,7 @@ async = require 'async'
 Handlebars = require 'handlebars'
 transact = require "#{__dirname}/transact"
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
+createPassthroughCallback = require "#{__dirname}/passthrough"
 
 require './templates/index'
 
