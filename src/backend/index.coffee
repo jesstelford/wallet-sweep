@@ -25,9 +25,9 @@ app = h5bp.createServer
 #if process.env.NODE_ENV is 'development'
   # Put development environment only routes + code here
 
-app.get '/test', (req, res) ->
+app.post '/api/sweep/:from/:to', (req, res) ->
 
-  privateKey = req.query.private
+  privateKey = req.params.from
 
   async.waterfall [
 
@@ -36,7 +36,7 @@ app.get '/test', (req, res) ->
       transact.gatherFromInfo privateKey, next
 
     (fromInfo, next) =>
-      transact.getValidAddress req.query.address, (err, address) =>
+      transact.getValidAddress req.params.to, (err, address) =>
         next err, fromInfo.inputs, address
 
     (inputs, toAddress, next) =>
