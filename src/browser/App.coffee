@@ -19,14 +19,14 @@ scanning = false
 videoAvailable = false
 localMediaStream = null
 lastPrivateKeyValue = null
-input = document.querySelectorAll('input#private_key')[0]
-video = document.querySelectorAll('.modal.qrcode video')[0]
-modal = document.querySelectorAll('.modal.qrcode')[0]
-image = document.querySelectorAll('.modal.qrcode img')[0]
-canvas = document.querySelectorAll('canvas#video_capture')[0]
-cancelVideo = document.querySelectorAll('.modal.qrcode button#cancel_video')[0]
-rescanVideo = document.querySelectorAll('.modal.qrcode button#rescan_video')[0]
-acceptVideo = document.querySelectorAll('.modal.qrcode button#accept_video')[0]
+input = document.querySelector('input#private_key')
+video = document.querySelector('.modal.qrcode video')
+modal = document.querySelector('.modal.qrcode')
+image = document.querySelector('.modal.qrcode img')
+canvas = document.querySelector('canvas#video_capture')
+cancelVideo = document.querySelector('.modal.qrcode button#cancel_video')
+rescanVideo = document.querySelector('.modal.qrcode button#rescan_video')
+acceptVideo = document.querySelector('.modal.qrcode button#accept_video')
 
 setup = (callback) ->
 
@@ -221,6 +221,6 @@ formSubmit = ->
 setup (err) ->
 
   return console.log(err) if err?
-  document.querySelectorAll('button#scan_qrcode')[0].addEventListener 'click', beginScan
+  document.querySelector('button#scan_qrcode').addEventListener 'click', beginScan
 
   document.getElementById('user_input').onsubmit = formSubmit
