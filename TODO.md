@@ -1,6 +1,5 @@
 # TODO
 
-* Move all calculations to external file / module
 * Remove dogecoin dependancy from external file
   * Since can't pass dogecoin methods directly, do something like:
   ```coffeescript
