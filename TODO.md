@@ -1,6 +1,7 @@
 # TODO
 
 * Accept the POST from client to backend
+* Client side address validations
 * Figure out TestNet address prefixes
 * Show error messages to user
 * Test on mobile devices
