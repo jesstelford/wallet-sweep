@@ -1,5 +1,6 @@
 # TODO
 
+* Move all calculations to external file / module
 * Figure out TestNet address prefixes
 * Accept the POST from client to backend
 * Register for SSL security
