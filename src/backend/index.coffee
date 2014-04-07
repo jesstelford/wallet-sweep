@@ -6,7 +6,8 @@ transact = require "#{__dirname}/transact"
 dogecoin = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 createPassthroughCallback = require "#{__dirname}/passthrough"
 
-require './templates/index'
+# Inject the template into Handlebars.templates["index"]
+require "#{__dirname}/templates/index"
 
 # Note that the directory tree is relative to the 'BACKEND_LIBDIR' Makefile
 # variable (`lib` by default) directory
