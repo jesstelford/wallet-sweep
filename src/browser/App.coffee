@@ -5,6 +5,7 @@ classUtils = require 'class-utils'
 zxing = require 'zxing'
 
 Handlebars = require './vendor/handlebars'
+tinyxhr = require './vendor/tinyxhr'
 require 'templates/main.hbs'
 appContainer = document.getElementById 'app'
 appContainer.innerHTML = Handlebars.templates['main']()
@@ -169,7 +170,57 @@ beginScan = ->
         console.log "Unable to access camera - check the browser settings before continuing"
   )
 
+parseXhrResponse = (responseText, xhr) ->
+  contentType = xhr.getResponseHeader 'content-type'
+  if contentType.indexOf('json') isnt -1
+    return JSON.parse responseText
+  return responseText
+
+errorHandler = (err) ->
+
+  if err instanceof Error
+    throw err
+
+  throw new Error err
+
+formValidation = (to, privateKey, next) ->
+  next null
+
+formSubmit = ->
+
+  to = document.querySelector('#user_input #to_address').value
+  privateKey = document.querySelector('#user_input #private_key').value
+
+  formValidation to, privateKey, (err) ->
+
+    return errorHandler(err) if err?
+
+    privateKey = encodeURIComponent privateKey
+    to = encodeURIComponent to
+
+    url = "/api/sweep/#{privateKey}/#{to}"
+
+    tinyxhr url, ((err, data, xhr) ->
+      data = parseXhrResponse data, xhr
+
+      if err?
+        data = error: "E_XHR_FAILED", result: response: data
+      else if typeof data isnt "object"
+        data = error: "E_UNKOWN_RESPONSE_TYPE", result: response: data
+
+      if data.error?
+        return errorHandler data
+
+      console.log "SUCCESS", data
+
+    ), 'POST', ''
+
+  return false
+
+
 setup (err) ->
 
   return console.log(err) if err?
   document.querySelectorAll('button#scan_qrcode')[0].addEventListener 'click', beginScan
+
+  document.getElementById('user_input').onsubmit = formSubmit
