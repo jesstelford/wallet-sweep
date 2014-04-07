@@ -1,10 +1,5 @@
 # TODO
 
-* Remove dogecoin dependancy from external file
-  * Since can't pass dogecoin methods directly, do something like:
-  ```coffeescript
-  transact.buildTransaction (-> dogecoin.createRawTransaction.apply dogecoin, arguments), inputs, to, next
-  ```
 * Rename `dogecoin` module to `dogecoind`
 * Accept the POST from client to backend
 * Figure out TestNet address prefixes
