@@ -96,7 +96,7 @@ gatherFromInfo = (privateKey, next) ->
     return next(err) if err?
     next null, {address, unspentOutputs, inputs}
 
-buildTransaction = (dogecoin, inputs, toAddress, next) ->
+buildTransaction = (createRawTransaction, inputs, toAddress, next) ->
 
   async.waterfall [
 
@@ -105,7 +105,7 @@ buildTransaction = (dogecoin, inputs, toAddress, next) ->
 
     (outputs) =>
       nextAsync = createPassthroughCallback.apply null, arguments
-      dogecoin.createRawTransaction inputs.inputs, outputs, nextAsync
+      createRawTransaction inputs.inputs, outputs, nextAsync
 
     (outputs, rawTransaction) =>
       nextAsync = createPassthroughCallback.apply null, arguments
@@ -119,7 +119,7 @@ buildTransaction = (dogecoin, inputs, toAddress, next) ->
     (outputs, rawTransaction, totalWithFee, outputsWithFee) =>
       # And recalculate the raw transaction
       nextAsync = createPassthroughCallback.apply null, arguments
-      dogecoin.createRawTransaction inputs.inputs, outputsWithFee, nextAsync
+      createRawTransaction inputs.inputs, outputsWithFee, nextAsync
 
   ], (err, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
 
