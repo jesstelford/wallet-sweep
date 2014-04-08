@@ -2,6 +2,7 @@
 
 * Success Modal on client
 * Show error messages to user
+* Move Scan button to beggining of input field
 * Client side address validations
 * ~~Figure out TestNet address prefixes~~ See: [here](http://www.reddit.com/r/dogecoindev/comments/22dvlz/what_are_dogecoins_live_testnet_address_prefixes/cgm2qfv)
 * Test on mobile devices
