@@ -14,6 +14,21 @@
     <button id="accept_video" class="continue" disabled>Continue</button>
   </div>
 
+  <article class="modal success hidden">
+    <header><h1>Success!</h1></header>
+    <table>
+      <thead> <tr> <th colspan=2>Transaction Info</th> </tr> </thead>
+      <tfoot> <tr> <td>Total Dogecoin Sent</td> <td>xxxx{{! TODO }}</td> </tr> </tfoot>
+      <tbody>
+        <tr> <td>Dogecoin To Sweep</td> <td>xxxx{{! TODO }}</td> </tr>
+        <tr> <td>Network Fess</td>      <td>xxxx{{! TODO }}</td> </tr>
+        <tr> <td>Admin Fess</td>        <td>Free!</td> </tr>
+      </tbody>
+    </table>
+    <button>Wow!</button>
+    <footer><a href="{{! TODO }}">Detailed Transaction Info</a></footer>
+  </article>
+
   {{! Used for capturing a video frame }}
   <canvas id="video_capture" class="hidden"></canvas>
 
