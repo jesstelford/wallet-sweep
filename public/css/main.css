@@ -1,3 +1,15 @@
+/*
+ * Colours:
+ *   Doge-brown: #F2EDE0
+ *   Red-muted: #df5e6a
+ *   Red-dark: #aa2230;
+ *   Green-muted: #9bc969
+ *   Green-dark: #628e33
+ *
+ * Doge symbol: &ETH; = \0110
+ *
+ */
+
 /* apply a natural box layout model to all elements */
 /* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
 *, *:before, *:after {
@@ -14,12 +26,12 @@ a:hover {
 	text-decoration: none;
 }
 
-header, footer {
+#app > header, #app > footer {
 	width: 100%;
 	text-align: center;
 }
 
-header {
+#app > header {
 	height: 150px;
 	background-color: #967adc;
 	color: white;
@@ -27,7 +39,7 @@ header {
 	position: relative;
 }
 
-header:before {
+#app > header:before {
 	content: "Sweeper";
 	position: absolute;
 	left: 0;
@@ -44,17 +56,17 @@ section, footer {
 	color: #555;
 }
 
-footer {
+#app > footer {
 	padding-top: 20px;
 	background-color: #F2EDE0;
 }
 
-footer p {
+#app > footer p {
 	padding-bottom: 20px;
 	margin-bottom: 0;
 }
 
-header h1 {
+#app > header h1 {
 	position: relative;
 	margin: 0;
 	padding-top: 20px;
@@ -196,7 +208,7 @@ button.continue:not([disabled]):active {
 	box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
 }
 
-.modal.qrcode {
+.modal.qrcode, .modal.successful-trans {
 	display: block;
 	text-align: center;
 	top: -50px;
@@ -204,38 +216,38 @@ button.continue:not([disabled]):active {
 	margin-left: -200px;
 }
 
-.modal.qrcode #not_found_message,
-.modal.qrcode #found_message,
-.modal.qrcode video, .modal.qrcode img {
+.qrcode #not_found_message,
+.qrcode #found_message,
+.qrcode video, .qrcode img {
 	margin: 40px 40px 15px 40px;
 	width: 320px;
 	height: 240px;
 	line-height: 240px;
 }
 
-.modal.qrcode video, .modal.qrcode img {
+.qrcode video, .qrcode img {
 	display: block;
 	border: 1px solid #aaa;
 }
 
-.modal.qrcode button {
+.qrcode button {
 	margin-bottom: 20px;
 }
 
-.modal.qrcode.not_found button#rescan_video,
-.modal.qrcode.scanning button#accept_video,
-.modal.qrcode.found button#accept_video {
+.qrcode.not_found button#rescan_video,
+.qrcode.scanning button#accept_video,
+.qrcode.found button#accept_video {
 	display: inline;
 }
 
-.modal.qrcode.scanning button#rescan_video,
-.modal.qrcode.not_found button#accept_video,
-.modal.qrcode.found button#rescan_video {
+.qrcode.scanning button#rescan_video,
+.qrcode.not_found button#accept_video,
+.qrcode.found button#rescan_video {
 	display: none;
 }
 
-.modal.qrcode #not_found_message,
-.modal.qrcode #found_message {
+.qrcode #not_found_message,
+.qrcode #found_message {
 	display: none;
 	position: absolute;
 	top: 0;
@@ -246,21 +258,21 @@ button.continue:not([disabled]):active {
 	font-size: 2em;
 }
 
-.modal.qrcode.not_found #not_found_message,
-.modal.qrcode.found #found_message {
+.qrcode.not_found #not_found_message,
+.qrcode.found #found_message {
 	display: block;
 }
 
-.modal.qrcode #not_found_message {
+.qrcode #not_found_message {
 	color: #aa2230;
 }
 
-.modal.qrcode #found_message {
+.qrcode #found_message {
 	color: #628e33;
 }
 
-.modal.qrcode #not_found_message:before,
-.modal.qrcode #found_message:before {
+.qrcode #not_found_message:before,
+.qrcode #found_message:before {
 	display: inline-block;
 	border-radius: 50%;
 	width: 1.5em;
@@ -271,13 +283,13 @@ button.continue:not([disabled]):active {
 	margin-right: 0.3em;
 }
 
-.modal.qrcode #not_found_message:before {
+.qrcode #not_found_message:before {
 	content: '✘';
 	border-color: #aa2230;
 	background-color: #df5e6a;
 }
 
-.modal.qrcode #found_message:before {
+.qrcode #found_message:before {
 	content: '✔';
 	border-color: #628e33;
 	background-color: #9bc969;
@@ -290,4 +302,53 @@ section#user_input, section#instructions {
 
 section#instructions ol {
 	margin-top: 40px;
+}
+
+.successful-trans h1 {
+	color: #9bc969;
+}
+
+.successful-trans table {
+	width: 100%;
+	margin-bottom: 20px;
+}
+
+.successful-trans th {
+	text-align: center;
+}
+
+.successful-trans td:first-child {
+	width: 60%;
+	text-align: right;
+}
+
+.successful-trans td:first-child + td {
+	text-align: left;
+	padding-left: 5%;
+}
+
+.successful-trans tfoot {
+	font-size: 1.1em;
+}
+
+.successful-trans tfoot td {
+	padding-top: 10px;
+}
+
+.successful-trans tfoot td:first-child + td {
+	font-weight: bold;
+}
+
+.successful-trans > footer {
+	font-size: 0.8em;
+	font-style: italic;
+	padding: 10px 0;
+}
+
+.successful-trans .free {
+	font-style: italic;
+}
+
+.doge:after {
+	content: '\00a0\0110'; /* [space]Ð */
 }
