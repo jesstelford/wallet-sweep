@@ -114,7 +114,7 @@ buildTransaction = (createRawTransaction, inputs, toAddress, next) ->
     (outputs, rawTransaction, totalWithFee) =>
       # Now that we have a total including a fee, we need to recalculat
       nextAsync = createPassthroughCallback.apply null, arguments
-      getOutputs toAddress, totalWithFee, nextAsync
+      getOutputs toAddress, totalWithFee.total, nextAsync
 
     (outputs, rawTransaction, totalWithFee, outputsWithFee) =>
       # And recalculate the raw transaction
@@ -294,7 +294,9 @@ applyNetworkFee = (inputs, outputs, rawTx, next) ->
       }
 
     # Deduct fee
-    next null, inputs.totalCoins - fee
+    next null
+      total: inputs.totalCoins - fee
+      fee: fee
 
 getOutputs = (toAddress, totalCoins, next) ->
 

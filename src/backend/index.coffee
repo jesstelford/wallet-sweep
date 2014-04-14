@@ -7,6 +7,8 @@ transact = require "#{__dirname}/transact"
 dogecoind = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
 createPassthroughCallback = require "#{__dirname}/passthrough"
 
+COIN = 100000000
+
 # Fix fairly useless un-bound methods of node-dogecoin
 # This allows passing the dogecoin.XX methods around for later execution within
 # different contexts
@@ -37,16 +39,19 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
     (fromInfo, next) =>
       transact.getValidAddress req.params.to, (err, address) =>
-        next err, fromInfo.inputs, address
+        next err, fromInfo, address
 
-    (inputs, toAddress, next) =>
+    (fromInfo, toAddress, next) =>
 
-      transact.buildTransaction dogecoind.createRawTransaction, inputs, toAddress, next
+      # TODO: Inject secondary output for gathering usage fees
+      transact.buildTransaction dogecoind.createRawTransaction, fromInfo.inputs, toAddress, (err, rawTransaction) =>
+        next err, fromInfo, rawTransaction
 
-    (rawTransaction, next) =>
-      dogecoind.signRawTransaction rawTransaction, [], [privateKey], next
+    (fromInfo, rawTransaction, next) =>
+      dogecoind.signRawTransaction rawTransaction, [], [privateKey], (err, signedTransaction) =>
+        next err, fromInfo, signedTransaction
 
-    (signedTransaction, next) =>
+    (fromInfo, signedTransaction, next) =>
 
       if not signedTransaction.complete
         return res.json {
@@ -55,17 +60,19 @@ app.post '/api/sweep/:from/:to', (req, res) ->
             signed_transaction: signedTransaction
         }
 
-      next null, signedTransaction
+      next null, fromInfo, signedTransaction
 
-    (signedTransaction, next) =>
+    (fromInfo, signedTransaction, next) =>
+      # TODO: Show user a confirmation message about the fee before proceeding
       next = createPassthroughCallback.apply null, arguments
       dogecoind.sendRawTransaction signedTransaction.hex, next
 
     (signedTransaction, sendResult, next) =>
 
-      dogecoind.decodeRawTransaction signedTransaction.hex, next
+      dogecoind.decodeRawTransaction signedTransaction.hex, (err, decodedTransaction) =>
+        next err, fromInfo, decodedTransaction
 
-  ], (err, decodedTransaction) =>
+  ], (err, fromInfo, decodedTransaction) =>
 
     if err?
       console.log "ERROR:", err
@@ -73,7 +80,21 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
     console.log "SUCCESS:", JSON.stringify(decodedTransaction)
 
-    res.json 200, {success: true, result: decodedTransaction}
+    totalOutput = 0
+    for output in decodedTransaction.vout
+      totalOutput += output.value
+
+    totalInput /= COIN
+
+    res.json 200,
+      success: true
+      result:
+        txid: decodedTransaction.txid
+        totalInput: totalInput
+        totalOutput: totalOutput
+        networkFee: totalInput - totalOutput
+        adminFee: 0 # TODO: Update to actual admin fee
+        transaction: decodedTransaction
 
 
 app.get '/', (req, res) ->
