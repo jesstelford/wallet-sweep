@@ -186,6 +186,11 @@ errorHandler = (err) ->
 formValidation = (to, privateKey, next) ->
   next null
 
+appendToElement = (element, html) ->
+  d = document.createElement 'div'
+  d.innerHTML = html
+  return element.append d.firstChild
+
 formSubmit = ->
 
   to = document.querySelector('#user_input #to_address').value
@@ -211,7 +216,8 @@ formSubmit = ->
       if data.error?
         return errorHandler data
 
-      console.log "SUCCESS", data
+      successHtml = Handlebars.templates['success'](data)
+      successElement = appendToElement appContainer, successHtml
 
     ), 'POST', ''
 

@@ -1,0 +1,13 @@
+<article class="modal successful-trans">
+  <header><h1>Success!</h1></header>
+  <table>
+    <tfoot> <tr> <td>Total Dogecoin Swept</td> <td class='doge'>{{totalOutput}}</td> </tr> </tfoot>
+    <tbody>
+      <tr> <td>Dogecoin Found</td> <td class="doge">{{totalInput}}</td> </tr>
+      <tr> <td>Network Fess</td>   <td class={{#if networkFee}}"doge">{{networkFee}}{{else}}"free">Free!{{/if}}</td> </tr>
+      <tr> <td>Admin Fess</td>     <td class={{#if adminFee}}"doge">{{adminFee}}{{else}}"free">Free!{{/if}}</td> </tr>
+    </tbody>
+  </table>
+  <button>Wow!</button>
+  <footer><a href="http://dogechain.info/tx/{{txid}}">Detailed Transaction Info</a></footer>
+</article>
