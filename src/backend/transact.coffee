@@ -294,7 +294,7 @@ applyNetworkFee = (inputs, outputs, rawTx, next) ->
       }
 
     # Deduct fee
-    next null
+    next null,
       total: inputs.totalCoins - fee
       fee: fee
 
