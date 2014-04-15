@@ -5,6 +5,9 @@
  *   Red-dark: #aa2230;
  *   Green-muted: #9bc969
  *   Green-dark: #628e33
+ *   Light-grey: #aaa
+ *   Dark-grey: #555
+ *   Almost-black: #222
  *
  * Doge symbol: &ETH; = \0110
  *
@@ -347,6 +350,15 @@ section#instructions ol {
 
 .successful-trans .free {
 	font-style: italic;
+}
+
+.successful-trans > p {
+	color: #aaa;
+	font-size: 0.9em;
+	font-style: italic;
+	width: 60%;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .doge:after {
