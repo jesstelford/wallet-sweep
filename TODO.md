@@ -13,6 +13,9 @@
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
+* Logging
+  * Transactions on the backend (mongoDB?)
+  * Visits on the frontend
 * Allow selecting which camera to use on mobile
   * Add a "swap" icon in the camera feed on-screen
   * Cycle through available cameras each time swap icon touched
