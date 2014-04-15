@@ -191,7 +191,7 @@ formValidation = (to, privateKey, next) ->
 appendToElement = (element, html) ->
   d = document.createElement 'div'
   d.innerHTML = html
-  return element.append d.firstChild
+  return element.appendChild d.firstChild
 
 formSubmit = ->
 
