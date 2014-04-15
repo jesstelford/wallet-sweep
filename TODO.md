@@ -1,5 +1,6 @@
 # TODO
 
+* Update the README
 * Show error messages to user
 * Move Scan button to beggining of input field
 * Warn user before transaction (incl. fees to be taken out)
