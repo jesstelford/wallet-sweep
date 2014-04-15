@@ -84,7 +84,7 @@ app.post '/api/sweep/:from/:to', (req, res) ->
     for output in decodedTransaction.vout
       totalOutput += output.value
 
-    totalInput /= COIN
+    totalInput = fromInfo.inputs.totalCoins / COIN
 
     res.json 200,
       success: true
