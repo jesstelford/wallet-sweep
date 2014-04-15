@@ -29,6 +29,9 @@ canvas = document.querySelector('canvas#video_capture')
 cancelVideo = document.querySelector('.modal.qrcode button#cancel_video')
 rescanVideo = document.querySelector('.modal.qrcode button#rescan_video')
 acceptVideo = document.querySelector('.modal.qrcode button#accept_video')
+scanQR = document.querySelector('button#scan_qrcode')
+sweepCoins = document.querySelector('button#submit')
+sweepForm = document.getElementById('user_input')
 
 setup = (callback) ->
 
@@ -195,12 +198,20 @@ appendToElement = (element, html) ->
 
 formSubmit = ->
 
+  # Protect against double clicks
+  sweepCoins.setAttribute "disabled", "disabled"
+  scanQR.setAttribute "disabled", "disabled"
+
   to = document.querySelector('#user_input #to_address').value
   privateKey = document.querySelector('#user_input #private_key').value
 
   formValidation to, privateKey, (err) ->
 
-    return errorHandler(err) if err?
+    if err?
+      # Re-enable the buttons
+      sweepCoins.removeAttribute "disabled"
+      scanQR.removeAttribute "disabled"
+      return errorHandler(err)
 
     privateKey = encodeURIComponent privateKey
     to = encodeURIComponent to
@@ -222,6 +233,17 @@ formSubmit = ->
       mainContainer = document.getElementById 'main'
       successElement = appendToElement mainContainer, successHtml
 
+      # Dismissing the success modal
+      successElement.querySelector('button').onclick = ->
+        # Re-enable buttons
+        sweepCoins.removeAttribute "disabled"
+        scanQR.removeAttribute "disabled"
+
+        # Attempt removal of modal from DOM
+        try
+          mainContainer.removeChild successElement
+
+
     ), 'POST', ''
 
   return false
@@ -230,6 +252,6 @@ formSubmit = ->
 setup (err) ->
 
   return console.log(err) if err?
-  document.querySelector('button#scan_qrcode').onclick = beginScan
+  scanQR.onclick = beginScan
 
-  document.getElementById('user_input').onsubmit = formSubmit
+  sweepForm.onsubmit = formSubmit
