@@ -218,8 +218,9 @@ formSubmit = ->
       if data.error?
         return errorHandler data
 
-      successHtml = Handlebars.templates['success'](data)
-      successElement = appendToElement appContainer, successHtml
+      successHtml = Handlebars.templates['success'](data.result)
+      mainContainer = document.getElementById 'main'
+      successElement = appendToElement mainContainer, successHtml
 
     ), 'POST', ''
 
