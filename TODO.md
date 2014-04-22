@@ -2,6 +2,10 @@
 
 * Update the README
 * Show error messages to user
+* Add a help page
+  * Document errors / what they mean
+  * Write up an FAQ
+  * Brief intro on Dogecoin / Crypto with external links
 * Move Scan button to beggining of input field
 * Warn user before transaction (incl. fees to be taken out)
   * Send fee amount to client
