@@ -229,24 +229,30 @@ formSubmit = ->
       if data.error?
         return errorHandler data
 
-      successHtml = Handlebars.templates['success'](data.result)
       mainContainer = document.getElementById 'main'
-      successElement = appendToElement mainContainer, successHtml
 
-      # Dismissing the success modal
-      successElement.querySelector('button').onclick = ->
+      renderAndAttachModal 'success', deata.result, mainContainer, 'button', ->
         # Re-enable buttons
         sweepCoins.removeAttribute "disabled"
         scanQR.removeAttribute "disabled"
 
-        # Attempt removal of modal from DOM
-        try
-          mainContainer.removeChild successElement
-
-
     ), 'POST', ''
 
   return false
+
+renderAndAttachModal = (templateName, data, toElement, dismissSelector, dismissCallback) ->
+
+  renderedHtml = Handlebars.templates['success'](data)
+  attachedElement = appendToElement toElement, renderedHtml
+
+  # Dismissing the modal
+  attachedElement.querySelector(dismissSelector).onclick = ->
+
+    dismissCallback()
+
+    # Attempt removal of modal from DOM
+    try
+      toElement.removeChild attachedElement
 
 
 setup (err) ->
