@@ -73,6 +73,7 @@ gatherFromInfo = (privateKey, next) ->
           error: "E_NOT_ENOUGH_FUNDS"
           result:
             required: 0
+            current: inputs.totalCoins
         }
 
       nextAsync null, address, unspentOutputs, inputs
@@ -277,6 +278,7 @@ applyNetworkFee = (inputs, outputs, rawTx, next) ->
         error: "E_CANNOT_AFFORD_FEE"
         result:
           required: fee
+          current: inputs.totalCoins
       }
 
     # Deduct fee
