@@ -211,7 +211,7 @@ button.continue:not([disabled]):active {
 	box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
 }
 
-.modal.qrcode, .modal.successful-trans {
+.modal.qrcode, .modal.successful-trans, .modal.error-message {
 	display: block;
 	text-align: center;
 	top: -50px;
@@ -342,7 +342,7 @@ section#instructions ol {
 	font-weight: bold;
 }
 
-.successful-trans > footer {
+.successful-trans > footer, .error-message > footer {
 	font-size: 0.8em;
 	font-style: italic;
 	padding: 10px 0;
@@ -352,13 +352,24 @@ section#instructions ol {
 	font-style: italic;
 }
 
+.successful-trans > p, .error-message > p {
+	margin-left: auto;
+	margin-right: auto;
+}
+
 .successful-trans > p {
+	width: 60%;
 	color: #aaa;
 	font-size: 0.9em;
 	font-style: italic;
-	width: 60%;
-	margin-left: auto;
-	margin-right: auto;
+}
+
+.successful-trans > p {
+	width: 80%;
+}
+
+.error-message h1 {
+	color: #aa2230;
 }
 
 .doge:after {
