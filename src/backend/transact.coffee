@@ -18,6 +18,8 @@ getValidAddress = (address, next) ->
     # Not a valid dogecoin address
     return next {
       error: "E_NOT_ADDRESS"
+      result:
+        address: address
     }
 
   publicKeyValidator = coinstring.validate coininfo('DOGE').versions.public
