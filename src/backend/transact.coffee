@@ -25,44 +25,28 @@ getValidAddress = (address, next) ->
   publicKeyValidator = coinstring.validate coininfo('DOGE').versions.public
   privateKeyValidator = coinstring.validate coininfo('DOGE').versions.private
 
-  validate = (address, nextValidate) ->
-
-    if process.env.NODE_ENV is 'development'
-      if address.indexOf('c') is 0
-        # assume it's a private key
-        return getAddressFromPrivateKey address, (err, result) =>
-          return nextValidate err, {address: result, isvalid: true}
-      else
-        return nextValidate null, {address, isvalid: true}
-
-    if publicKeyValidator address
-
-      return nextValidate null, {address, isvalid: true}
-
-    else if privateKeyValidator address
-
-      getAddressFromPrivateKey address, (err, result) =>
-        return nextValidate err, {address: result, isvalid: true}
-
+  if process.env.NODE_ENV is 'development'
+    if address.indexOf('c') is 0
+      # assume it's a private key
+      return getAddressFromPrivateKey address, next
     else
-      # Nope.
-      return nextValidate {
-        error: "E_NOT_DOGECOIN_ADDRESS"
-        result:
-          address: address
-      }
+      return next null, address
 
-  validate address, (err, result) ->
+  if publicKeyValidator address
 
-    return next(err) if err?
+    return next null, address
 
-    if not result.isvalid
-      return next {
-        error: "E_NOT_VALID_ADDRESS"
-        result: result
-      }
+  else if privateKeyValidator address
 
-    next null, result.address
+    return getAddressFromPrivateKey address, next
+
+  else
+    # Nope.
+    return next {
+      error: "E_NOT_DOGECOIN_ADDRESS"
+      result:
+        address: address
+    }
 
 gatherFromInfo = (privateKey, next) ->
 
