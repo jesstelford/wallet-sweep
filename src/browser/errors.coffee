@@ -6,10 +6,16 @@ module.exports =
     "Couldn't generate a valid transaction to sweep those coins."
 
   "E_NOT_ADDRESS": ({address}) ->
-    "Looks like the address <abbr title='#{address}'>#{address.slice 0, 5}...</abbr> isn't valid."
+    "Looks like the address <abbr title='#{address}'>#{address.slice 0, 8}...</abbr> isn't valid."
 
   "E_NOT_DOGECOIN_ADDRESS": ({address}) ->
-    "Looks like the address <abbr title='#{address}'>#{address.slice 0, 5}...</abbr> isn't a valid Dogecoin Address.<br />This tool is currently Dogecoin only."
+    "Looks like the address <abbr title='#{address}'>#{address.slice 0, 8}...</abbr> isn't a valid Dogecoin Address.<br />This tool is currently Dogecoin only."
+
+  "E_NOT_PRIVATE_KEY": ({private_key}) ->
+    "Looks like the key <abbr title='#{private_key}'>#{private_key.slice 0, 8}...</abbr> isn't a valid Private Key."
+
+  "E_NOT_DOGECOIN_PRIVATE_KEY": ({private_key}) ->
+    "Looks like the key <abbr title='#{private_key}'>#{private_key.slice 0, 8}...</abbr> isn't a valid Dogecoin Private Key.<br />This tool is currently Dogecoin only."
 
   "E_NOT_ENOUGH_FUNDS": ({required, current}) ->
     "It's not possible to sweep this wallet.<br />You need at least #{required} coin#{if required > 1 then 's'}, but the wallet has #{current}"
@@ -26,6 +32,8 @@ module.exports =
 
   "E_UNKNOWN_AMOUNT": ->
     "The total value of this wallet wasn't determined, so we can't sweep it right now. Go ahead and give it another shot!"
+
+
 
   "E_UNKNOWN": ->
     "Not sure what happened, but we couldn't sweep those coins.<br />Refresh the page, and give it another shot."
