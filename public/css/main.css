@@ -364,7 +364,7 @@ section#instructions ol {
 	font-style: italic;
 }
 
-.successful-trans > p {
+.error-message > p {
 	width: 80%;
 }
 
