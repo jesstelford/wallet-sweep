@@ -336,7 +336,14 @@ getUnspentOutputs = (address, next) ->
 
 getAddressFromPrivateKey = (privateKey, next) ->
 
-  ck = CoinKey.fromWif privateKey
+  try
+    ck = CoinKey.fromWif privateKey
+  catch e
+    return next {
+      error: "E_NOT_PRIVATE_KEY"
+      result:
+        private_key: privateKey
+    }
 
   if process.env.NODE_ENV is 'development'
     return next null, ck.publicAddress
@@ -345,7 +352,7 @@ getAddressFromPrivateKey = (privateKey, next) ->
     return next {
       error: "E_NOT_DOGECOIN_PRIVATE_KEY"
       result:
-        private: privateKey
+        private_key: privateKey
     }
 
   next null, ck.publicAddress
