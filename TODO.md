@@ -1,7 +1,6 @@
 # TODO
 
 * Update the README
-* Show error messages to user
 * Add a help page
   * Document errors / what they mean
   * Write up an FAQ
