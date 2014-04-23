@@ -1,0 +1,8 @@
+<article class="modal error">
+  <header><h1>Uh-oh...</h1></header>
+  <p>{{{error.message}}}</p>
+  {{#if action}}
+  <button>{{action}}</button>
+  {{/if}}
+  <footer><a href="/help#error-{{error.id}}">More Info</a></footer>
+</article>

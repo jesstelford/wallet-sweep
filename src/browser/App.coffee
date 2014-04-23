@@ -2,12 +2,14 @@
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
 zxing = require 'zxing'
+errors = require 'errors'
 tinyxhr = require './vendor/tinyxhr'
 classUtils = require 'class-utils'
 
 Handlebars = require './vendor/handlebars'
 require 'templates/main.hbs'
 require 'templates/success.hbs'
+require 'templates/error.hbs'
 
 appContainer = document.getElementById 'app'
 appContainer.innerHTML = Handlebars.templates['main']()
@@ -183,12 +185,29 @@ parseXhrResponse = (responseText, xhr) ->
 
 errorHandler = (err) ->
 
-  if err instanceof Error
-    throw err
+  data =
+    error:
+      message: generateErrorMessage(err)
+      id: err.error
+    action: generateErrorAction(err)
 
-  throw new Error err
+  mainContainer = document.getElementById 'main'
+
+  renderAndAttachModal 'error', data, mainContainer, 'button', ->
+    # Re-enable buttons
+    sweepCoins.removeAttribute "disabled"
+    scanQR.removeAttribute "disabled"
+
+generateErrorMessage = (err) ->
+  return errors[err.error](err.result) if errors[err.error]?
+  return errors["E_UNKNOWN"]()
+
+generateErrorAction = (err) ->
+  return "Got it!" if errors[err.error]?
+  return null
 
 formValidation = (to, privateKey, next) ->
+  # TODO
   next null
 
 appendToElement = (element, html) ->
@@ -211,7 +230,7 @@ formSubmit = ->
       # Re-enable the buttons
       sweepCoins.removeAttribute "disabled"
       scanQR.removeAttribute "disabled"
-      return errorHandler(err)
+      return errorHandler err
 
     privateKey = encodeURIComponent privateKey
     to = encodeURIComponent to
@@ -231,7 +250,7 @@ formSubmit = ->
 
       mainContainer = document.getElementById 'main'
 
-      renderAndAttachModal 'success', deata.result, mainContainer, 'button', ->
+      renderAndAttachModal 'success', data.result, mainContainer, 'button', ->
         # Re-enable buttons
         sweepCoins.removeAttribute "disabled"
         scanQR.removeAttribute "disabled"
@@ -242,17 +261,19 @@ formSubmit = ->
 
 renderAndAttachModal = (templateName, data, toElement, dismissSelector, dismissCallback) ->
 
-  renderedHtml = Handlebars.templates['success'](data)
+  renderedHtml = Handlebars.templates[templateName](data)
   attachedElement = appendToElement toElement, renderedHtml
 
   # Dismissing the modal
-  attachedElement.querySelector(dismissSelector).onclick = ->
+  dismissElement = attachedElement.querySelector(dismissSelector)
 
-    dismissCallback()
+  if dismissElement?
+    dismissElement.onclick = ->
+      dismissCallback()
 
-    # Attempt removal of modal from DOM
-    try
-      toElement.removeChild attachedElement
+      # Attempt removal of modal from DOM
+      try
+        toElement.removeChild attachedElement
 
 
 setup (err) ->
