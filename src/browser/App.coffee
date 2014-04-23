@@ -179,7 +179,7 @@ beginScan = ->
 
 parseXhrResponse = (responseText, xhr) ->
   contentType = xhr.getResponseHeader 'content-type'
-  if contentType.indexOf('json') isnt -1
+  if contentType? and contentType.indexOf('json') isnt -1
     return JSON.parse responseText
   return responseText
 
