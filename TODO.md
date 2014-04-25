@@ -1,7 +1,5 @@
 # TODO
 
-* Logging
-  * Transactions on the backend (mongoDB?)
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
@@ -25,6 +23,8 @@
 * Allow selecting which camera to use on mobile
   * Add a "swap" icon in the camera feed on-screen
   * Cycle through available cameras each time swap icon touched
+  * Default to camera with highest capabilities, as this is more likely to be
+    the rear facing camera on a mobile device
 * Support BIP32 encoded private keys
 * Move fee calculation to client
   * Avoids re-submitting private key over network
