@@ -85,10 +85,10 @@ app.post '/api/sweep/:from/:to', (req, res) ->
   ], (err, fromInfo, decodedTransaction) =>
 
     if err?
-      logger.error 'sweep error', {error: err, from: fromInfo.address}
+      logger.error 'sweep error', {error: err, from: fromInfo?.address}
 
       # Stop the profiling
-      logger.profile 'profile: sweep', {error: err, from: fromInfo.address}
+      logger.profile 'profile: sweep', {error: err, from: fromInfo?.address}
 
       return res.json err
 
