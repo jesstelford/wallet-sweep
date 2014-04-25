@@ -2,6 +2,7 @@ test/fixtures
 public/js/*.js
 public/js/*.map
 lib/
+log/
 tmp/
 node_modules
 *.swp
