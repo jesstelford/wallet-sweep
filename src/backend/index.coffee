@@ -99,7 +99,8 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
 app.get '/', (req, res) ->
 
-  res.send 200, Handlebars.templates['index']({})
+  res.send 200, Handlebars.templates['index']
+    envIsProduction: process.env.NODE_ENV is 'production'
 
 app.listen 3000
 console.log "Listening at http://localhost:3000"
