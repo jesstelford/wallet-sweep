@@ -25,6 +25,7 @@
   * Cycle through available cameras each time swap icon touched
 * Rate limit requests
   * Warn when attempting to re-sweep a just-swept key (while txs are unconfirmed)
+* Add CSRF checks
 * Support BIP32 encoded private keys
 * Move fee calculation to client
   * Avoids re-submitting private key over network
