@@ -28,7 +28,8 @@
     "async": "~0.2.10",
     "coinkey": "~0.1.0",
     "coininfo": "0.0.1",
-    "coinstring": "~0.2.0"
+    "coinstring": "~0.2.0",
+    "request": "~2.34.0"
   },
   "devDependencies": {
     "coffee-script-redux": "2.0.0-beta7",

@@ -2,6 +2,7 @@ _ = require 'underscore'
 async = require 'async'
 CoinKey = require 'coinkey'
 coininfo = require 'coininfo'
+dogechain = require "#{__dirname}/adapters/dogechain"
 coinstring = require 'coinstring'
 createPassthroughCallback = require "#{__dirname}/passthrough"
 
@@ -313,25 +314,15 @@ getTransactionSize = (rawTransactionHex, next) ->
 
 getUnspentOutputs = (address, next) ->
 
-  result = {
-    "unspent_outputs": [
-      {
-        "tx_hash": "455cbfa740bfcb000e590ad100c007c51f7a357b7c6719a6af40e55442b1a062"
-        "tx_output_n": 0
-        "script": "76a914a3e7e00a4158baf2f3bbd0fe108f2b464c0b4e1488ac"
-        "value": "#{10 * COIN}"
-        "confirmations": 5677
+  dogechain.unspentOutputs address, (err, result) ->
+
+    if err?
+      return next {
+        error: "E_UNKNOWN_AMOUNT"
+        result: err
       }
-    ]
-    "success": 1
-  }
 
-  if not result?.success?
-    return next {
-      error: "E_UNKNOWN_AMOUNT"
-    }
-
-  next null, result
+    next null, result
 
 
 getAddressFromPrivateKey = (privateKey, next) ->
