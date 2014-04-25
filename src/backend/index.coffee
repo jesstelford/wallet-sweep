@@ -2,6 +2,7 @@ _ = require 'underscore'
 h5bp = require 'h5bp'
 path = require 'path'
 async = require 'async'
+logger = require "#{__dirname}/logger"
 Handlebars = require 'handlebars'
 transact = require "#{__dirname}/transact"
 dogecoind = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
@@ -75,10 +76,8 @@ app.post '/api/sweep/:from/:to', (req, res) ->
   ], (err, fromInfo, decodedTransaction) =>
 
     if err?
-      console.log "ERROR:", err
+      logger.error 'sweep error', {error: err}
       return res.json err
-
-    console.log "SUCCESS:", JSON.stringify(decodedTransaction)
 
     totalOutput = 0
     for output in decodedTransaction.vout
@@ -86,15 +85,19 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
     totalInput = fromInfo.inputs.totalCoins / COIN
 
+    result =
+      txid: decodedTransaction.txid
+      totalInput: totalInput
+      totalOutput: totalOutput
+      networkFee: totalInput - totalOutput
+      adminFee: 0 # TODO: Update to actual admin fee
+      transaction: decodedTransaction
+
+    logger.info 'sweep success', {result}
+
     res.json 200,
       success: true
-      result:
-        txid: decodedTransaction.txid
-        totalInput: totalInput
-        totalOutput: totalOutput
-        networkFee: totalInput - totalOutput
-        adminFee: 0 # TODO: Update to actual admin fee
-        transaction: decodedTransaction
+      result: result
 
 
 app.get '/', (req, res) ->
@@ -103,4 +106,4 @@ app.get '/', (req, res) ->
     envIsProduction: process.env.NODE_ENV is 'production'
 
 app.listen 3000
-console.log "Listening at http://localhost:3000"
+logger.info "STARTUP: Listening on port 3000"

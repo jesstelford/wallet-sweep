@@ -1,5 +1,6 @@
 _ = require 'underscore'
 async = require 'async'
+logger = require "#{__dirname}/logger"
 CoinKey = require 'coinkey'
 coininfo = require 'coininfo'
 dogechain = require "#{__dirname}/adapters/dogechain"
@@ -224,54 +225,54 @@ getFeeFromSize = (bytes, baseFee) ->
 applyNetworkFee = (inputs, outputs, rawTx, next) ->
 
   priority = inputs.priority
-  console.log "PRIO:", priority
-  console.log "Inputs.totalCoins", inputs.totalCoins
+  logger.info "PRIO: #{priority}"
+  logger.info "Inputs.totalCoins #{inputs.totalCoins}"
 
   getTransactionSize rawTx, (err, nBytes) ->
 
-    console.log "nBytes:", nBytes
+    logger.info "nBytes: #{nBytes}"
     priority /= nBytes
 
-    console.log "PRIO:", priority
+    logger.info "PRIO: #{priority}"
 
     # Application enforeced fee per kilobyte that goes to the network
     payFee = getFeeFromSize(nBytes, applicationSpecificFee)
 
-    console.log "payFee", payFee
+    logger.info "payFee: #{payFee}"
 
     baseFee = nMinTxFee
     newBlockSize = 1 + nBytes
     minFee = getFeeFromSize(nBytes, baseFee)
 
-    console.log "minFee:", minFee
+    logger.info "minFee: #{minFee}"
 
     if allowFree priority
       # Transactions under 10K with high enough priority are free
       if nBytes < 10000
-        console.log "FREE TRANSACTION!"
+        logger.info "FREE TRANSACTION!"
         minFee = 0
 
     # Charge for processing dust outputs
     minFee = _(outputs).reduce(
       (minFee, output) ->
         increase = if (output * COIN) < DUST_SOFT_LIMIT then baseFee else 0
-        console.log "DUST Increase:", increase, "output:", output
+        logger.info "DUST Increase: #{increase} output: #{output}"
         return minFee + increase
       minFee
     )
 
-    console.log "minFee:", minFee
+    logger.info "minFee: #{minFee}"
 
     # Out of range value
     if minFee < 0 or minFee > MAX_MONEY
       minFee = MAX_MONEY
-      console.log "Out of range fee:", minFee
+      logger.info "Out of range fee: #{minFee}"
 
 
     # Pick the highest of the two fees
     fee = Math.max minFee, payFee
 
-    console.log "final fee:", fee
+    logger.info "final fee: #{fee}"
 
     # Ruh-roh!
     if inputs.totalCoins < fee
