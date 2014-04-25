@@ -30,6 +30,8 @@ app = h5bp.createServer
 
 app.post '/api/sweep/:from/:to', (req, res) ->
 
+  logger.profile 'profile: sweep'
+
   privateKey = req.params.from
 
   async.waterfall [
@@ -49,7 +51,10 @@ app.post '/api/sweep/:from/:to', (req, res) ->
         next err, fromInfo, rawTransaction
 
     (fromInfo, rawTransaction, next) =>
+
+      logger.profile 'profile: signRawTransaction'
       dogecoind.signRawTransaction rawTransaction, [], [privateKey], (err, signedTransaction) =>
+        logger.profile 'profile: signRawTransaction', {rawTransaction, from: fromInfo.address}
         next err, fromInfo, signedTransaction
 
     (fromInfo, signedTransaction, next) =>
@@ -66,9 +71,13 @@ app.post '/api/sweep/:from/:to', (req, res) ->
     (fromInfo, signedTransaction, next) =>
       # TODO: Show user a confirmation message about the fee before proceeding
       next = createPassthroughCallback.apply null, arguments
-      dogecoind.sendRawTransaction signedTransaction.hex, next
 
-    (signedTransaction, sendResult, next) =>
+      logger.profile 'profile: sendRawTransaction'
+      dogecoind.sendRawTransaction signedTransaction.hex, ->
+        logger.profile 'profile: sendRawTransaction', {signedTransaction, from: fromInfo.address}
+        next.apply null, arguments
+
+    (fromInfo, signedTransaction, sendResult, next) =>
 
       dogecoind.decodeRawTransaction signedTransaction.hex, (err, decodedTransaction) =>
         next err, fromInfo, decodedTransaction
@@ -76,7 +85,11 @@ app.post '/api/sweep/:from/:to', (req, res) ->
   ], (err, fromInfo, decodedTransaction) =>
 
     if err?
-      logger.error 'sweep error', {error: err}
+      logger.error 'sweep error', {error: err, from: fromInfo.address}
+
+      # Stop the profiling
+      logger.profile 'profile: sweep', {error: err, from: fromInfo.address}
+
       return res.json err
 
     totalOutput = 0
@@ -93,7 +106,10 @@ app.post '/api/sweep/:from/:to', (req, res) ->
       adminFee: 0 # TODO: Update to actual admin fee
       transaction: decodedTransaction
 
-    logger.info 'sweep success', {result}
+    logger.info 'sweep success', {result: _(result).omit('transaction'), from: fromInfo.address}
+
+    # Stop the profiling
+    logger.profile 'profile: sweep', from: fromInfo.address
 
     res.json 200,
       success: true

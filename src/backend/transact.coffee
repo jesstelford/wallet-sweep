@@ -11,7 +11,17 @@ createPassthroughCallback = require "#{__dirname}/passthrough"
 # Public methods
 ###
 
-getValidAddress = (address, next) ->
+getValidAddress = (address, origNext) ->
+
+  logger.profile 'profile: getValidAddress'
+
+  next = (error, result) ->
+    if error?
+      logger.profile 'profile: getValidAddress', {error}
+    else
+      logger.profile 'profile: getValidAddress'
+
+    origNext error, result
 
   # Try to extract just the address part
   address = address.match(/^(?:dogecoin:\/{0,2})?([a-z0-9]+)/i)[1]
@@ -50,7 +60,17 @@ getValidAddress = (address, next) ->
         address: address
     }
 
-gatherFromInfo = (privateKey, next) ->
+gatherFromInfo = (privateKey, origNext) ->
+
+  logger.profile 'profile: gatherFromInfo'
+
+  next = (error, result) ->
+    if error?
+      logger.profile 'profile: gatherFromInfo', {error}
+    else
+      logger.profile 'profile: gatherFromInfo'
+
+    origNext error, result
 
   async.waterfall [
 
@@ -85,7 +105,17 @@ gatherFromInfo = (privateKey, next) ->
     return next(err) if err?
     next null, {address, unspentOutputs, inputs}
 
-buildTransaction = (createRawTransaction, inputs, toAddress, next) ->
+buildTransaction = (createRawTransaction, inputs, toAddress, origNext) ->
+
+  logger.profile 'profile: buildTransaction'
+
+  next = (error, result) ->
+    if error?
+      logger.profile 'profile: buildTransaction', {error}
+    else
+      logger.profile 'profile: buildTransaction'
+
+    origNext error, result
 
   async.waterfall [
 
@@ -94,7 +124,11 @@ buildTransaction = (createRawTransaction, inputs, toAddress, next) ->
 
     (outputs) =>
       nextAsync = createPassthroughCallback.apply null, arguments
-      createRawTransaction inputs.inputs, outputs, nextAsync
+
+      logger.profile 'profile: createRawTransaction'
+      createRawTransaction inputs.inputs, outputs, ->
+        logger.profile 'profile: createRawTransaction', {inputs: inputs.inputs, outputs}
+        nextAsync.apply null, arguments
 
     (outputs, rawTransaction) =>
       nextAsync = createPassthroughCallback.apply null, arguments
@@ -108,7 +142,11 @@ buildTransaction = (createRawTransaction, inputs, toAddress, next) ->
     (outputs, rawTransaction, totalWithFee, outputsWithFee) =>
       # And recalculate the raw transaction
       nextAsync = createPassthroughCallback.apply null, arguments
-      createRawTransaction inputs.inputs, outputsWithFee, nextAsync
+
+      logger.profile 'profile: createRawTransaction'
+      createRawTransaction inputs.inputs, outputsWithFee, ->
+        logger.profile 'profile: createRawTransaction', {inputs: inputs.inputs, outputsWithFee}
+        nextAsync.apply null, arguments
 
   ], (err, outputs, rawTransaction, totalWithFee, outputsWithFee, rawTransactionWithFee) =>
 
@@ -224,55 +262,59 @@ getFeeFromSize = (bytes, baseFee) ->
 
 applyNetworkFee = (inputs, outputs, rawTx, next) ->
 
+  feeMeta =
+    inputPriority: inputs.priority
+    totalCoins: inputs.totalCoins
+
   priority = inputs.priority
-  logger.info "PRIO: #{priority}"
-  logger.info "Inputs.totalCoins #{inputs.totalCoins}"
 
   getTransactionSize rawTx, (err, nBytes) ->
 
-    logger.info "nBytes: #{nBytes}"
     priority /= nBytes
-
-    logger.info "PRIO: #{priority}"
 
     # Application enforeced fee per kilobyte that goes to the network
     payFee = getFeeFromSize(nBytes, applicationSpecificFee)
-
-    logger.info "payFee: #{payFee}"
 
     baseFee = nMinTxFee
     newBlockSize = 1 + nBytes
     minFee = getFeeFromSize(nBytes, baseFee)
 
-    logger.info "minFee: #{minFee}"
+    feeMeta.networkFee = minFee
+    feeMeta.applicationFee = payFee
+    feeMeta.nBytes = nBytes
+    feeMeta.adjustedPriority = priority
 
     if allowFree priority
       # Transactions under 10K with high enough priority are free
       if nBytes < 10000
-        logger.info "FREE TRANSACTION!"
+        feeMeta.isOldSmallFreeTrans = true
         minFee = 0
 
     # Charge for processing dust outputs
     minFee = _(outputs).reduce(
       (minFee, output) ->
         increase = if (output * COIN) < DUST_SOFT_LIMIT then baseFee else 0
-        logger.info "DUST Increase: #{increase} output: #{output}"
+
+        if increase
+          feeMeta.dust = feeMeta.dust || []
+          feeMeta.dust.push fee: increase, output: output
+
         return minFee + increase
       minFee
     )
 
-    logger.info "minFee: #{minFee}"
-
     # Out of range value
     if minFee < 0 or minFee > MAX_MONEY
       minFee = MAX_MONEY
-      logger.info "Out of range fee: #{minFee}"
 
 
     # Pick the highest of the two fees
     fee = Math.max minFee, payFee
 
-    logger.info "final fee: #{fee}"
+    feeMeta.adjustedNetworkFee = minFee
+    feeMeta.fee = fee
+
+    logger.info "fees", feeMeta
 
     # Ruh-roh!
     if inputs.totalCoins < fee
@@ -315,7 +357,12 @@ getTransactionSize = (rawTransactionHex, next) ->
 
 getUnspentOutputs = (address, next) ->
 
+  logger.profile 'profile: dogechain'
+
   dogechain.unspentOutputs address, (err, result) ->
+
+    # Stop profiling
+    logger.profile 'profile: dogechain'
 
     if err?
       return next {
