@@ -2,7 +2,6 @@
 
 * Logging
   * Transactions on the backend (mongoDB?)
-  * Visits on the frontend
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
