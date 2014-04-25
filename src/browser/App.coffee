@@ -31,14 +31,12 @@ canvas = document.querySelector('canvas#video_capture')
 cancelVideo = document.querySelector('.modal.qrcode button#cancel_video')
 rescanVideo = document.querySelector('.modal.qrcode button#rescan_video')
 acceptVideo = document.querySelector('.modal.qrcode button#accept_video')
-scanQR = document.querySelector('button#scan_qrcode')
 sweepCoins = document.querySelector('button#submit')
 sweepForm = document.getElementById('user_input')
+scanQR = document.querySelector('button#scan_qrcode')
+uploadQREl = document.querySelector('input#upload_qrcode')
 
 setup = (callback) ->
-
-  if not navigator.getUserMedia
-    return callback "getUserMedia not supported"
 
   ctx = canvas.getContext('2d')
   image.src = ""
@@ -60,31 +58,7 @@ setup = (callback) ->
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     imgdecodeFrame = getImageDataUri()
 
-    zxing.decode(
-      imgdecodeFrame
-      (err, data) ->
-        if err?
-          console.log(err)
-          return
-        else if typeof data isnt "string"
-          console.log "Didn't detect Key"
-          classUtils.replaceClass modal, "scanning", "not_found"
-          rescanVideo.removeAttribute "disabled"
-        # else if data[0] isnt "S"
-        #   console.log "Not a Dogecoin Private Key"
-        #   classUtils.replaceClass modal, "scanning", "not_found"
-        #   rescanVideo.removeAttribute "disabled"
-        else
-          # Looks like a private key, hooray!
-          lastPrivateKeyValue = input.value
-          input.value = data
-          console.log "QR Code data:", data
-          classUtils.replaceClass modal, "scanning", "found"
-          acceptVideo.removeAttribute "disabled"
-        imgdecodeFrame = getImageDataUri()
-        image.src = imgdecodeFrame
-        cleanupScanning()
-    )
+    decodeQRInImage imgdecodeFrame, cleanupScanning
 
   cleanupScanning = ->
 
@@ -95,8 +69,7 @@ setup = (callback) ->
     video.src = ""
     videoAvailable = false
 
-    classUtils.addClass video, "hidden"
-    classUtils.removeClass image, "hidden"
+    showImageOverVideo()
 
     clearTimeout stopCheckingTimeout
     clearInterval captureInterval
@@ -139,17 +112,48 @@ setup = (callback) ->
   rescanVideo.addEventListener 'click', ->
     classUtils.addClass modal, "hidden"
     if scanning then cleanupScanning()
-    beginScan()
+    if navigator.getUserMedia
+      beginScan()
+    else
+      uploadQREl.click()
 
-  # Wait for the video stream's meta data to be loaded
-  video.addEventListener 'loadedmetadata', videoLoaded, false
+  if navigator.getUserMedia
+    # Wait for the video stream's meta data to be loaded
+    video.addEventListener 'loadedmetadata', videoLoaded, false
+
 
   callback()
 
-beginScan = ->
+showImageOverVideo = ->
+  classUtils.addClass video, "hidden"
+  classUtils.removeClass image, "hidden"
 
-  return if scanning
-  scanning = true
+decodeQRInImage = (imgdecodeFrame, callback) ->
+  zxing.decode(
+    imgdecodeFrame
+    (err, data) ->
+      if err?
+        # TODO: Push these errors to the server?
+        console.log(err)
+        classUtils.replaceClass modal, "scanning", "not_found"
+        rescanVideo.removeAttribute "disabled"
+      else if typeof data isnt "string"
+        console.log "Didn't detect Key"
+        classUtils.replaceClass modal, "scanning", "not_found"
+        rescanVideo.removeAttribute "disabled"
+      else
+        # Looks like a private key, hooray!
+        lastPrivateKeyValue = input.value
+        input.value = data
+        console.log "QR Code data:", data
+        classUtils.replaceClass modal, "scanning", "found"
+        acceptVideo.removeAttribute "disabled"
+      image.src = imgdecodeFrame
+      callback?(err, data)
+  )
+
+
+setupQRModal = ->
 
   classUtils.addClass image, "hidden"
   classUtils.removeClass video, "hidden"
@@ -162,6 +166,14 @@ beginScan = ->
   cancelVideo.removeAttribute "disabled"
   rescanVideo.setAttribute "disabled", "disabled"
   acceptVideo.setAttribute "disabled", "disabled"
+
+
+beginScan = ->
+
+  return if scanning
+  scanning = true
+
+  setupQRModal()
 
   navigator.getUserMedia(
     {video: true}
@@ -176,6 +188,56 @@ beginScan = ->
       if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
         console.log "Unable to access camera - check the browser settings before continuing"
   )
+
+scanUpload = (event) ->
+
+  if event.target.files.length is 0
+    classUtils.addClass modal, "hidden"
+    return
+
+  setupQRModal()
+
+  file = event.target.files[0]
+
+  reader = new FileReader()
+  reader.onload = (event) ->
+    # Resize the image down if it's too big (eg: From a high-res mobile camera)
+    downsizeDataUri event.target.result, 800, 800, (err, uri) ->
+      decodeQRInImage uri, showImageOverVideo
+
+  reader.readAsDataURL(file)
+
+downsizeDataUri = (uri, maxWidth, maxHeight, next) ->
+  tmpCanvas = document.createElement 'canvas'
+  ctx = tmpCanvas.getContext '2d'
+  tmpImage = new Image
+
+  tmpImage.onload = ->
+    # Early out if now downsize necessary
+    if tmpImage.width <= maxWidth and tmpImage.height <= maxHeight
+      return next null, uri
+
+    widthRatio = maxWidth / tmpImage.width
+    heightRatio = maxHeight / tmpImage.height
+
+    # Select the smallest ratio to keep aspect
+    ratio = Math.min widthRatio, heightRatio
+
+    newWidth = tmpImage.width * ratio
+    newHeight = tmpImage.height * ratio
+
+    tmpCanvas.width = newWidth
+    tmpCanvas.height = newHeight
+
+    ctx.drawImage tmpImage, 0, 0, newWidth, newHeight
+
+    return next null, tmpCanvas.toDataURL 'image/png'
+
+  # Trigger the load
+  tmpImage.src = uri
+
+
+
 
 parseXhrResponse = (responseText, xhr) ->
   contentType = xhr.getResponseHeader 'content-type'
@@ -279,6 +341,13 @@ renderAndAttachModal = (templateName, data, toElement, dismissSelector, dismissC
 setup (err) ->
 
   return console.log(err) if err?
-  scanQR.onclick = beginScan
+
+  if navigator.getUserMedia
+    scanQR.onclick = beginScan
+  else
+    uploadQREl.onchange = scanUpload
+    # Proxy the click to the input element
+    scanQR.onclick = ->
+      uploadQREl.click()
 
   sweepForm.onsubmit = formSubmit
