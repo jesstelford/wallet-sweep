@@ -70,10 +70,10 @@ setup = (callback) ->
           console.log "Didn't detect Key"
           classUtils.replaceClass modal, "scanning", "not_found"
           rescanVideo.removeAttribute "disabled"
-        else if data[0] isnt "S"
-          console.log "Not a Dogecoin Private Key"
-          classUtils.replaceClass modal, "scanning", "not_found"
-          rescanVideo.removeAttribute "disabled"
+        # else if data[0] isnt "S"
+        #   console.log "Not a Dogecoin Private Key"
+        #   classUtils.replaceClass modal, "scanning", "not_found"
+        #   rescanVideo.removeAttribute "disabled"
         else
           # Looks like a private key, hooray!
           lastPrivateKeyValue = input.value
