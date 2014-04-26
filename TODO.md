@@ -1,5 +1,6 @@
 # TODO
 
+* Use [upstart](http://blog.noort.be/2011/03/25/node-js-with-upstart-and-monit.html) to keep `dogecoind` and `node` up
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
@@ -29,3 +30,4 @@
 * Move fee calculation to client
   * Avoids re-submitting private key over network
 * Move entire process to client to enhance security
+* Move server to Fedora to [take advantage of systemd](http://savanne.be/articles/deploying-node-js-with-systemd/)
