@@ -4,16 +4,20 @@ winston = require 'winston'
 
 if process.env.NODE_ENV isnt 'development'
 
-  # `main` is executed within `lib`
-  appDir = "#{path.dirname(require.main.filename)}/.."
-  logDir = "#{appDir}/log"
+  if process.env.LOG_DIR? and fs.existsSync process.env.LOG_DIR
+    logDir = process.env.LOG_DIR
+  else
+    # Default log dir as local directory
+    # `main` is executed within `lib`
+    appDir = "#{path.dirname(require.main.filename)}/.."
+    logDir = "#{appDir}/log"
 
-  if not fs.existsSync logDir
-    fs.mkdirSync logDir
+    if not fs.existsSync logDir
+      fs.mkdirSync logDir
 
   console = false
-  errorFile = "#{logDir}/error.log"
-  logFile = "#{logDir}/all.log"
+  errorFile = "#{logDir}/application-error.log"
+  logFile = "#{logDir}/application.log"
 else
   console = true
   errorFile = false
