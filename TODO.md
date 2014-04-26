@@ -1,6 +1,5 @@
 # TODO
 
-* Use [upstart](http://blog.noort.be/2011/03/25/node-js-with-upstart-and-monit.html) to keep `dogecoind` and `node` up
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
