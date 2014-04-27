@@ -46,7 +46,8 @@ msToHuman = (ms) ->
 
   getMinutes = (ms) ->
     minutes = Math.floor(ms / (1000 * 60))
-    return "#{minutes} minute#{if minutes > 1 then 's'}"
+    return "#{minutes} minute#{if minutes > 1 then 's'}" if minutes > 0
+    return ""
 
   if ms <= 3000
     return "a few seconds"
@@ -56,7 +57,7 @@ msToHuman = (ms) ->
     return "#{seconds} second#{if seconds > 1 then 's'}"
 
   if ms <= (1000 * 60 * 60) # 60 minutes
-    return getMinutes()
+    return getMinutes(ms)
 
   hours = Math.floor(ms / (1000 * 60 * 60))
   hoursMessage = if hours is 1
@@ -64,4 +65,7 @@ msToHuman = (ms) ->
   else
     "#{hours} hours"
 
-  return "#{hoursMessage} and #{getMinutes()}"
+  minutesMessage = getMinutes(ms - (hours * 1000 * 60 * 60))
+  hoursMessage += " and #{minutesMessage}" if minutesMessage?
+
+  return hoursMessage
