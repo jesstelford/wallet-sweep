@@ -1,5 +1,10 @@
 # TODO
 
+* Move Scan button to beggining of input field
+* Add options for importing wallet address from tip bots
+  * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
+  * /u/dogetipbot? Contact Josh.
+* Add a URL parameter for "to" address (which can then be [linked to from @tipdoge](https://twitter.com/Kim_Jong_Skill/status/460129136619442178) for example)
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
@@ -15,7 +20,6 @@
   * Warn when attempting to re-sweep a just-swept key (while txs are unconfirmed)
 * Add CSRF checks
 * Update the README
-* Move Scan button to beggining of input field
 * Client side address validations
 * ~~Figure out TestNet address prefixes~~ See: [here](http://www.reddit.com/r/dogecoindev/comments/22dvlz/what_are_dogecoins_live_testnet_address_prefixes/cgm2qfv)
 * Test on mobile devices
