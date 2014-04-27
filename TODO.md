@@ -8,6 +8,10 @@
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
+* Social Media integration - [post "wow I just sweeped a Paperwallet with http://claimmyco.in"](https://twitter.com/Kim_Jong_Skill/status/460129807171219456)
+  * Twitter
+  * Facebook
+  * Reddit?
 * Warn user before transaction (incl. fees to be taken out)
   * Send fee amount to client
   * Ask user's confirmation of spending fees
