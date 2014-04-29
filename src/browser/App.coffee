@@ -93,7 +93,9 @@ setup = (callback) ->
         imgdecodeFrame = getImageDataUri()
         image.src = imgdecodeFrame
 
-        classUtils.replaceClass modal, "scanning", "not_found"
+        classUtils.removeClass modal, "scanning"
+        classUtils.removeClass modal, "loading"
+        classUtils.addClass modal, "not_found"
         rescanVideo.removeAttribute "disabled"
         acceptVideo.setAttribute "disabled", "disabled"
         cleanupScanning()
@@ -135,18 +137,24 @@ decodeQRInImage = (imgdecodeFrame, callback) ->
       if err?
         # TODO: Push these errors to the server?
         console.log(err)
-        classUtils.replaceClass modal, "scanning", "not_found"
+        classUtils.removeClass modal, "scanning"
+        classUtils.removeClass modal, "loading"
+        classUtils.addClass modal, "not_found"
         rescanVideo.removeAttribute "disabled"
       else if typeof data isnt "string"
         console.log "Didn't detect Key"
-        classUtils.replaceClass modal, "scanning", "not_found"
+        classUtils.removeClass modal, "scanning"
+        classUtils.removeClass modal, "loading"
+        classUtils.addClass modal, "not_found"
         rescanVideo.removeAttribute "disabled"
       else
         # Looks like a private key, hooray!
         lastPrivateKeyValue = input.value
         input.value = data
         console.log "QR Code data:", data
-        classUtils.replaceClass modal, "scanning", "found"
+        classUtils.removeClass modal, "scanning"
+        classUtils.removeClass modal, "loading"
+        classUtils.addClass modal, "found"
         acceptVideo.removeAttribute "disabled"
       image.src = imgdecodeFrame
       callback?(err, data)
@@ -161,7 +169,13 @@ setupQRModal = ->
   classUtils.removeClass modal, "not_found"
   classUtils.removeClass modal, "found"
   classUtils.removeClass modal, "hidden"
-  classUtils.addClass modal, "scanning"
+  classUtils.removeClass modal, "loading"
+  classUtils.removeClass modal, "scanning"
+
+  if navigator.getUserMedia
+    classUtils.addClass modal, "scanning"
+  else
+    classUtils.addClass modal, "loading"
 
   cancelVideo.removeAttribute "disabled"
   rescanVideo.setAttribute "disabled", "disabled"
