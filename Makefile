@@ -39,7 +39,7 @@ CJSIFYEXTRAPARAMS =
 
 COFFEE=$(BINDIR)/coffee --js
 MOCHA=$(BINDIR)/mocha --compilers coffee:coffee-script-redux/register -r coffee-script-redux/register -r test-setup.coffee -u tdd -R dot
-CJSIFY=$(BINDIR)/cjsify --minify --root "$(BROWSER_SRCDIR)"
+CJSIFY=$(BINDIR)/cjsify --root "$(BROWSER_SRCDIR)"
 HANDLEBARS=$(BINDIR)/handlebars
 HANDLEBARS_PARAMS= --extension="$(TEMPLATE_EXTENSION)"
 
@@ -49,7 +49,9 @@ backend: $(BACKEND_TMPL_LIB) $(BACKEND_LIB) $(BACKEND_JSON_LIB)
 
 backend-dev: backend
 
-browser: $(BROWSER_TMPL_DIST)
+browser: browser-dep browser-all
+	
+browser-all: $(BROWSER_TMPL_DIST)
 	$(eval CJSIFYEXTRAPARAMS += $(BROWSER_TMPL_ALIASES))
 	@mkdir -p "$(BROWSER_JSDIR)"
 	@rm -f "$(BROWSER_JSDIR)/$(BROWSER_MAIN_MODULE).js.map"
@@ -57,7 +59,7 @@ browser: $(BROWSER_TMPL_DIST)
 # Cleanup temporarily compiled handlebars files
 	@rm -f $(BROWSER_TMPL_DISTDIR)/*.$(TEMPLATE_EXTENSION).js
 
-browser-dev: browser-dev-dep browser
+browser-dev: browser-dev-dep browser-all
 	@mv "$(BROWSER_MAIN_MODULE).js.map" "$(BROWSER_JSDIR)/"
 
 run-dev: browser-dev backend-dev node-dev
@@ -88,6 +90,9 @@ $(BROWSER_TMPL_DISTDIR)/%.$(TEMPLATE_EXTENSION).js: $(BROWSER_TMPL_SRCDIR)/%.$(T
 
 browser-dev-dep:
 	$(eval CJSIFYEXTRAPARAMS := --source-map "$(BROWSER_MAIN_MODULE).js.map" --inline-sources)
+
+browser-dep:
+	$(eval CJSIFYEXTRAPARAMS := --minify)
 
 
 .PHONY: phony-dep release test loc clean dep-dev run-dev run node browser
