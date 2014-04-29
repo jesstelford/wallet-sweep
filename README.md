@@ -73,6 +73,37 @@ pre-stop script
 end script
 ```
 
+## Automated installation of latest tagged version
+
+*Note*: Only use this on a server as it doesn't check out the code
+
+***`install.sh`***
+
+```bash
+#!/bin/sh
+version=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*name": ?"([^"]*)"/ && print($1) && exit')
+zipball_url=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*zipball_url": ?"([^"]*)"/ && print($1) && exit')
+name=wallet-sweep-$version
+
+wget $zipball_url -O $name.zip
+unzip $name.zip
+mv jesstelford-wallet-sweep-* $name
+
+ln -s dogecoin-config.json $name/src/backend/dogecoin-config.json
+
+cd $name
+npm install
+
+# Compile it
+make browser backend
+
+cd ../
+rm wallet-sweep
+ln -s $name wallet-sweep
+
+echo "Now run: $ cd wallet-sweep && make run"
+```
+
 # Coffee Boilerplate
 
 A quickstart CoffeeScript node server, designed to serve compiled, minified, and source-mapped CoffeeScript modules to the browser, templated with Handlebars. 
