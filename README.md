@@ -20,11 +20,9 @@ script
   user=username
   project=/some/location
   export HOME="/home/$user"  
-  export NODE_ENV=production
-  export LOG_DIR=/var/log/$user
 
   echo $$ > /var/run/$user.pid
-  exec sudo -u $user sh -c "/usr/bin/node $project/lib/index.js >> /var/log/$user/sys.log 2>&1"
+  exec sudo -u $user sh -c "NODE_ENV=production LOG_DIR=/var/log/$user /usr/bin/node $project/lib/index.js >> /var/log/$user/sys.log 2>&1"
 end script
 
 pre-start script
@@ -89,7 +87,7 @@ wget $zipball_url -O $name.zip
 unzip $name.zip
 mv jesstelford-wallet-sweep-* $name
 
-ln -s dogecoin-config.json $name/src/backend/dogecoin-config.json
+cp dogecoin-config.json $name/src/backend/dogecoin-config.json
 
 cd $name
 npm install
