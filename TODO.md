@@ -1,5 +1,6 @@
 # TODO
 
+* Better title / SEO / etc
 * Move Scan button to beggining of input field
 * Add options for importing wallet address from tip bots
   * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
@@ -20,6 +21,9 @@
   * Document errors / what they mean
   * Write up an FAQ
   * Brief intro on Dogecoin / Crypto with external links
+* Check for permission denied
+  * Either [provide instructions on re-enabling](http://stackoverflow.com/a/19236538/473961)
+  * or, switch over to the `<input>` method
 * Rate limit requests
   * Warn when attempting to re-sweep a just-swept key (while txs are unconfirmed)
 * Add CSRF checks
