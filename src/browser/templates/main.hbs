@@ -21,18 +21,20 @@
   <section id="user_input">
     <form method="post">
       <div id="input_wrapper">
-        <input type="text" name="to_address" id="to_address" placeholder="To Address" value="{{to_address}}" />
         <div class="input_and_button">
-          <input type="text" name="private_key" id="private_key" class="with_button" placeholder="Private Key" value="{{private_key}}" />
-          <button id="submit" name="submit" type="submit">Sweep</button>
+          <input type="text" name="to_address" id="to_address" placeholder="To Address" value="{{to_address}}" />
+          <button class="img_camera image" data-which="to_address"></button>
+          <input class="upload_qrcode hidden" name="upload_qrcode" type="file" accept="image/*" capture="camera" data-which="to_address" /><br />
+        </div>
+        <div class="input_and_button">
+          <input type="text" name="private_key" id="private_key" placeholder="Private Key" value="{{private_key}}" />
+          <button class="img_camera image" data-which="private_key"></button>
+          <input class="upload_qrcode hidden" name="upload_qrcode" type="file" accept="image/*" capture="camera" data-which="private_key" /><br />
         </div>
       </div>
     </form>
 
-    <div class="divider_text">- or -</div>
-
-    <button id="scan_qrcode" name="scan_qrcode">Scan QR Code</button><br />
-    <input id="upload_qrcode" class="hidden" name="upload_qrcode" type="file" accept="image/*" capture="camera" /><br />
+    <button id="submit" name="submit" type="submit">Sweep</button>
 
   </section>
 

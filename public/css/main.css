@@ -107,6 +107,13 @@ section, footer {
 
 input[type=text], button {
 	border: 1px solid #ddd;
+}
+
+input[type=text],
+button,
+button:hover,
+button:focus,
+button:active {
 	outline: none;
 }
 
@@ -117,10 +124,6 @@ input[type=text]:active, button:not([disabled]):active,
 .input_and_button input[type=text] ~ button:not([disabled]):focus ,
 .input_and_button input[type=text] ~ button:not([disabled]):active {
 	border: 1px solid #aaa;
-}
-
-.input_and_button input[type=text] {
-	border-right: 0;
 }
 
 .input_and_button input[type=text] ~ button,
@@ -174,6 +177,32 @@ button.continue:not([disabled]):active {
 	border-color: #628e33;
 }
 
+button.image {
+	z-index: 1;
+	position: relative;
+	border: none !important; /* :( because of specificity of .input_and_button input[type=text] ~ button */
+	background-color: inherit;
+	background-position: 0 0;
+}
+
+button.img_camera {
+	width: 46px;
+	height: 32px;
+	margin: 4px 0; /* Brings total height up to 40px, same as the input box */
+	background-image: url(/img/camera.png);
+	background-repeat: no-repeat;
+}
+
+button.img_camera:hover,
+button.img_camera:focus {
+	background-position: 0 -32px;
+}
+
+button.img_camera:active {
+	background-position: 0 -64px;
+}
+
+
 .input_and_button {
 	display: inline-block;
 	white-space: nowrap;
@@ -188,8 +217,8 @@ button.continue:not([disabled]):active {
 
 #user_input input#private_key {
 	width: 100%;
-	margin-right: -104px;
-	padding-right: 114px;
+	margin-right: -56px;
+	padding-right: 66px;
 	z-index: 1;
 }
 
@@ -202,6 +231,9 @@ button.continue:not([disabled]):active {
 #user_input input#to_address {
 	width: 100%;
 	margin-bottom: 10px;
+	margin-right: -56px;
+	padding-right: 66px;
+	z-index: 1;
 }
 
 .modal {
