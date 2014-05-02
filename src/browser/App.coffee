@@ -1,8 +1,6 @@
 # This file will be exported to the global namespace as a commonJS module based
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
-xhr = require 'xhr'
-zxing = require 'zxing'
 errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
