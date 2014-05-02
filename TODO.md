@@ -1,6 +1,7 @@
 # TODO
 
 * Move Scan button to beggining of input field
+* Detect when getUserMedia supported, but no webcams available
 * Add options for importing wallet address from tip bots
   * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
   * /u/dogetipbot? Contact Josh.
