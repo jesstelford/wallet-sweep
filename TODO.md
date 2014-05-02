@@ -1,6 +1,5 @@
 # TODO
 
-* Better title / SEO / etc
 * Move Scan button to beggining of input field
 * Add options for importing wallet address from tip bots
   * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
