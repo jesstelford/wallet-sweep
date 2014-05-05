@@ -1,10 +1,12 @@
 # This file will be exported to the global namespace as a commonJS module based
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
-zxing = require 'zxing'
 errors = require 'errors'
-tinyxhr = require './vendor/tinyxhr'
 classUtils = require 'class-utils'
+imageDecoder = require 'image-decoder'
+imageUploader = require 'image-uploader'
+apiSweep = require 'api/sweep'
+attachModal = require 'ui/attach-modal'
 
 Handlebars = require './vendor/handlebars'
 require 'templates/main.hbs'
@@ -58,7 +60,9 @@ setup = (callback) ->
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     imgdecodeFrame = getImageDataUri()
 
-    decodeQRInImage imgdecodeFrame, cleanupScanning
+    imageDecoder imgdecodeFrame, (err, data) ->
+      imageDecoderCallback err, data
+      cleanupScanning()
 
   cleanupScanning = ->
 
@@ -130,35 +134,24 @@ showImageOverVideo = ->
   classUtils.addClass video, "hidden"
   classUtils.removeClass image, "hidden"
 
-decodeQRInImage = (imgdecodeFrame, callback) ->
-  zxing.decode(
-    imgdecodeFrame
-    (err, data) ->
-      if err?
-        # TODO: Push these errors to the server?
-        console.log(err)
-        classUtils.removeClass modal, "scanning"
-        classUtils.removeClass modal, "loading"
-        classUtils.addClass modal, "not_found"
-        rescanVideo.removeAttribute "disabled"
-      else if typeof data isnt "string"
-        console.log "Didn't detect Key"
-        classUtils.removeClass modal, "scanning"
-        classUtils.removeClass modal, "loading"
-        classUtils.addClass modal, "not_found"
-        rescanVideo.removeAttribute "disabled"
-      else
-        # Looks like a private key, hooray!
-        lastPrivateKeyValue = input.value
-        input.value = data
-        console.log "QR Code data:", data
-        classUtils.removeClass modal, "scanning"
-        classUtils.removeClass modal, "loading"
-        classUtils.addClass modal, "found"
-        acceptVideo.removeAttribute "disabled"
-      image.src = imgdecodeFrame
-      callback?(err, data)
-  )
+imageDecoderCallback = (err, data) ->
+  image.src = imgdecodeFrame
+  if err?
+    # TODO: Push these errors to the server?
+    console.log(err)
+    classUtils.removeClass modal, "scanning"
+    classUtils.removeClass modal, "loading"
+    classUtils.addClass modal, "not_found"
+    rescanVideo.removeAttribute "disabled"
+  else
+    # Looks like a private key, hooray!
+    lastPrivateKeyValue = input.value
+    input.value = data
+    console.log "QR Code data:", data
+    classUtils.removeClass modal, "scanning"
+    classUtils.removeClass modal, "loading"
+    classUtils.addClass modal, "found"
+    acceptVideo.removeAttribute "disabled"
 
 
 setupQRModal = ->
@@ -203,61 +196,6 @@ beginScan = ->
         console.log "Unable to access camera - check the browser settings before continuing"
   )
 
-scanUpload = (event) ->
-
-  if event.target.files.length is 0
-    classUtils.addClass modal, "hidden"
-    return
-
-  setupQRModal()
-
-  file = event.target.files[0]
-
-  reader = new FileReader()
-  reader.onload = (event) ->
-    # Resize the image down if it's too big (eg: From a high-res mobile camera)
-    downsizeDataUri event.target.result, 800, 800, (err, uri) ->
-      decodeQRInImage uri, showImageOverVideo
-
-  reader.readAsDataURL(file)
-
-downsizeDataUri = (uri, maxWidth, maxHeight, next) ->
-  tmpCanvas = document.createElement 'canvas'
-  ctx = tmpCanvas.getContext '2d'
-  tmpImage = new Image
-
-  tmpImage.onload = ->
-    # Early out if now downsize necessary
-    if tmpImage.width <= maxWidth and tmpImage.height <= maxHeight
-      return next null, uri
-
-    widthRatio = maxWidth / tmpImage.width
-    heightRatio = maxHeight / tmpImage.height
-
-    # Select the smallest ratio to keep aspect
-    ratio = Math.min widthRatio, heightRatio
-
-    newWidth = tmpImage.width * ratio
-    newHeight = tmpImage.height * ratio
-
-    tmpCanvas.width = newWidth
-    tmpCanvas.height = newHeight
-
-    ctx.drawImage tmpImage, 0, 0, newWidth, newHeight
-
-    return next null, tmpCanvas.toDataURL 'image/png'
-
-  # Trigger the load
-  tmpImage.src = uri
-
-
-
-
-parseXhrResponse = (responseText, xhr) ->
-  contentType = xhr.getResponseHeader 'content-type'
-  if contentType? and contentType.indexOf('json') isnt -1
-    return JSON.parse responseText
-  return responseText
 
 errorHandler = (err) ->
 
@@ -269,7 +207,7 @@ errorHandler = (err) ->
 
   mainContainer = document.getElementById 'main'
 
-  renderAndAttachModal 'error', data, mainContainer, 'button', ->
+  attachModal 'error', data, mainContainer, 'button', ->
     # Re-enable buttons
     sweepCoins.removeAttribute "disabled"
     scanQR.removeAttribute "disabled"
@@ -308,49 +246,17 @@ formSubmit = ->
       scanQR.removeAttribute "disabled"
       return errorHandler err
 
-    privateKey = encodeURIComponent privateKey
-    to = encodeURIComponent to
-
-    url = "/api/sweep/#{privateKey}/#{to}"
-
-    tinyxhr url, ((err, data, xhr) ->
-      data = parseXhrResponse data, xhr
-
-      if err?
-        data = error: "E_XHR_FAILED", result: response: data
-      else if typeof data isnt "object"
-        data = error: "E_UNKOWN_RESPONSE_TYPE", result: response: data
-
-      if data.error?
-        return errorHandler data
+    apiSweep to, privateKey, (err, data, xhr) ->
+      return errorHandler(err) if err?
 
       mainContainer = document.getElementById 'main'
 
-      renderAndAttachModal 'success', data.result, mainContainer, 'button', ->
+      attachModal 'success', data.result, mainContainer, 'button', ->
         # Re-enable buttons
         sweepCoins.removeAttribute "disabled"
         scanQR.removeAttribute "disabled"
 
-    ), 'POST', ''
-
   return false
-
-renderAndAttachModal = (templateName, data, toElement, dismissSelector, dismissCallback) ->
-
-  renderedHtml = Handlebars.templates[templateName](data)
-  attachedElement = appendToElement toElement, renderedHtml
-
-  # Dismissing the modal
-  dismissElement = attachedElement.querySelector(dismissSelector)
-
-  if dismissElement?
-    dismissElement.onclick = ->
-      dismissCallback()
-
-      # Attempt removal of modal from DOM
-      try
-        toElement.removeChild attachedElement
-
 
 setup (err) ->
 
@@ -359,7 +265,16 @@ setup (err) ->
   if navigator.getUserMedia
     scanQR.onclick = beginScan
   else
-    uploadQREl.onchange = scanUpload
+    uploadQREl.onchange = (event) ->
+      setupQRModal()
+      imageUploader event, 800, 800, (err, uri) ->
+        if err?
+          # TODO: Show som error message?
+          classUtils.addClass modal, "hidden"
+        imageDecoder uri, (err, data) ->
+          imageDecoderCallback err, data
+          showImageOverVideo()
+
     # Proxy the click to the input element
     scanQR.onclick = ->
       uploadQREl.click()
