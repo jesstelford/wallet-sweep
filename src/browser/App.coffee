@@ -1,10 +1,10 @@
 # This file will be exported to the global namespace as a commonJS module based
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
+video = require 'video'
 errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
-imageUploader = require 'image-uploader'
 apiSweep = require 'api/sweep'
 attachModal = require 'ui/attach-modal'
 
@@ -16,61 +16,50 @@ require 'templates/error.hbs'
 appContainer = document.getElementById 'app'
 appContainer.innerHTML = Handlebars.templates['main']()
 
-navigator.getUserMedia = navigator.getUserMedia or navigator.webkitGetUserMedia or navigator.mozGetUserMedia or navigator.msGetUserMedia
-
 CHECK_TIMEOUT = 300
 KEEP_TRYING_TIMEOUT = 10000
 
-scanning = false
 videoAvailable = false
 localMediaStream = null
 lastPrivateKeyValue = null
 input = document.querySelector('input#private_key')
-video = document.querySelector('.modal.qrcode video')
+videoEl = document.querySelector('.modal.qrcode video')
 modal = document.querySelector('.modal.qrcode')
 image = document.querySelector('.modal.qrcode img')
-canvas = document.querySelector('canvas#video_capture')
 cancelVideo = document.querySelector('.modal.qrcode button#cancel_video')
 rescanVideo = document.querySelector('.modal.qrcode button#rescan_video')
 acceptVideo = document.querySelector('.modal.qrcode button#accept_video')
 sweepCoins = document.querySelector('button#submit')
 sweepForm = document.getElementById('user_input')
 scanQR = document.querySelector('button#scan_qrcode')
-uploadQREl = document.querySelector('input#upload_qrcode')
 
 setup = (callback) ->
 
-  ctx = canvas.getContext('2d')
   image.src = ""
   captureInterval = null
   stopCheckingTimeout = null
 
-  getImageDataUri = ->
-    # "image/webp" works in Chrome.
-    # Other browsers will fall back to image/png.
-    imgdecodeFrame = canvas.toDataURL('image/png')
+  video.setup {fallback: true, streamTo: video, width: 800, height: 800}
+
+  videoEl.addEventListener 'loadeddata', ->
+    videoAvailable = true
+
+  # Wait for the video stream's meta data to be loaded
+  videoEl.addEventListener 'loadedmetadata', videoLoaded, false
 
   decodeFrame = ->
-    return unless localMediaStream
-    return unless videoAvailable
-    # Correctly resize canvas element to same as video resolution
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    imgdecodeFrame = getImageDataUri()
-
-    imageDecoder imgdecodeFrame, (err, data) ->
-      imageDecoderCallback err, data
-      cleanupScanning()
+    video.capture (err, uri) ->
+      return console.log(err) if err?
+      imageDecoder uri, (err, data) ->
+        return console.log(err) if err?
+        image.src = data
+        imageDecoderCallback err, data
+        cleanupScanning()
 
   cleanupScanning = ->
 
-    return unless scanning
-
-    localMediaStream.stop()
-    localMediaStream = null
-    video.src = ""
+    video.stop()
+    videoEl.src = ""
     videoAvailable = false
 
     showImageOverVideo()
@@ -79,7 +68,6 @@ setup = (callback) ->
     clearInterval captureInterval
     captureInterval = null
     stopCheckingTimeout = null
-    scanning = false
 
   videoLoaded = ->
 
@@ -93,40 +81,31 @@ setup = (callback) ->
     # Don't check forever
     stopCheckingTimeout = setTimeout(
       ->
-        ctx.drawImage(video, 0, 0)
-        imgdecodeFrame = getImageDataUri()
-        image.src = imgdecodeFrame
+        video.capture (err, uri) ->
+          image.src = uri
 
-        classUtils.removeClass modal, "scanning"
-        classUtils.removeClass modal, "loading"
-        classUtils.addClass modal, "not_found"
-        rescanVideo.removeAttribute "disabled"
-        acceptVideo.setAttribute "disabled", "disabled"
-        cleanupScanning()
+          classUtils.removeClass modal, "scanning"
+          classUtils.removeClass modal, "loading"
+          classUtils.addClass modal, "not_found"
+          rescanVideo.removeAttribute "disabled"
+          acceptVideo.setAttribute "disabled", "disabled"
+          cleanupScanning()
       KEEP_TRYING_TIMEOUT
     )
 
   cancelVideo.addEventListener 'click', ->
     classUtils.addClass modal, "hidden"
-    if scanning then cleanupScanning()
+    cleanupScanning()
     input.value = lastPrivateKeyValue
 
   acceptVideo.addEventListener 'click', ->
     classUtils.addClass modal, "hidden"
-    if scanning then cleanupScanning()
+    cleanupScanning()
 
   rescanVideo.addEventListener 'click', ->
     classUtils.addClass modal, "hidden"
-    if scanning then cleanupScanning()
-    if navigator.getUserMedia
-      beginScan()
-    else
-      uploadQREl.click()
-
-  if navigator.getUserMedia
-    # Wait for the video stream's meta data to be loaded
-    video.addEventListener 'loadedmetadata', videoLoaded, false
-
+    cleanupScanning()
+    beginScan()
 
   callback()
 
@@ -177,24 +156,23 @@ setupQRModal = ->
 
 beginScan = ->
 
-  return if scanning
-  scanning = true
-
   setupQRModal()
 
-  navigator.getUserMedia(
-    {video: true}
-    (stream) ->
+  video.start sourceId, (err, result) ->
 
-      video.addEventListener 'loadeddata', ->
-        videoAvailable = true
+    if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
+      console.error "Unable to access camera - check the browser settings before continuing"
+    else
+      console.error "Couldn't start video stream"
 
-      video.src = window.URL.createObjectURL(stream)
+    return console.log(err) if err?
+
+    if result.video?.stream?
+      # videoEl is now being streamed the video
       localMediaStream = stream
-    (err) ->
-      if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
-        console.log "Unable to access camera - check the browser settings before continuing"
-  )
+    else if result.upload?.fallback
+      # the stream isn't available, but can fallback to image uploading
+      localMediaStream = null
 
 
 errorHandler = (err) ->
@@ -262,21 +240,6 @@ setup (err) ->
 
   return console.log(err) if err?
 
-  if navigator.getUserMedia
-    scanQR.onclick = beginScan
-  else
-    uploadQREl.onchange = (event) ->
-      setupQRModal()
-      imageUploader event, 800, 800, (err, uri) ->
-        if err?
-          # TODO: Show som error message?
-          classUtils.addClass modal, "hidden"
-        imageDecoder uri, (err, data) ->
-          imageDecoderCallback err, data
-          showImageOverVideo()
-
-    # Proxy the click to the input element
-    scanQR.onclick = ->
-      uploadQREl.click()
+  scanQR.onclick = beginScan
 
   sweepForm.onsubmit = formSubmit
