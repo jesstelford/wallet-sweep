@@ -40,15 +40,6 @@ setup = (callback) ->
 
   video.setup {fallback: true, streamTo: video, width: 800, height: 800}
 
-  decodeFrame = ->
-    video.capture (err, uri) ->
-      return console.log(err) if err?
-      imageDecoder uri, (err, data) ->
-        return console.log(err) if err?
-        imageEl.src = data
-        imageDecoderCallback err, data
-        cleanupScanning()
-
   cleanupScanning = ->
 
     video.stop()
@@ -59,30 +50,6 @@ setup = (callback) ->
     clearInterval captureInterval
     captureInterval = null
     stopCheckingTimeout = null
-
-  videoLoaded = ->
-
-    # Note: We purposely set these timeouts up AFTER the call to `getUserMedia`
-    # due to code execution being delayed while the browser waits for user to
-    # Allow access to video
-
-    # Check the video for a qr code continuously
-    captureInterval = setInterval decodeFrame, CHECK_TIMEOUT
-
-    # Don't check forever
-    stopCheckingTimeout = setTimeout(
-      ->
-        video.capture (err, uri) ->
-          imageEl.src = uri
-
-          classUtils.removeClass modalEl, "scanning"
-          classUtils.removeClass modalEl, "loading"
-          classUtils.addClass modalEl, "not_found"
-          rescanVideoEl.removeAttribute "disabled"
-          acceptVideoEl.setAttribute "disabled", "disabled"
-          cleanupScanning()
-      KEEP_TRYING_TIMEOUT
-    )
 
   cancelVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
@@ -144,6 +111,39 @@ setupQRModal = ->
   rescanVideoEl.setAttribute "disabled", "disabled"
   acceptVideoEl.setAttribute "disabled", "disabled"
 
+decodeFrame = ->
+  video.capture (err, uri) ->
+    return console.log(err) if err?
+    imageDecoder uri, (err, data) ->
+      return console.log(err) if err?
+      imageEl.src = data
+      imageDecoderCallback err, data
+      cleanupScanning()
+
+videoLoaded = ->
+
+  # Note: We purposely set these timeouts up AFTER the call to `getUserMedia`
+  # due to code execution being delayed while the browser waits for user to
+  # Allow access to video
+
+  # Check the video for a qr code continuously
+  captureInterval = setInterval decodeFrame, CHECK_TIMEOUT
+
+  # Don't check forever
+  stopCheckingTimeout = setTimeout(
+    ->
+      video.capture (err, uri) ->
+        imageEl.src = uri
+
+        classUtils.removeClass modalEl, "scanning"
+        classUtils.removeClass modalEl, "loading"
+        classUtils.addClass modalEl, "not_found"
+        rescanVideoEl.removeAttribute "disabled"
+        acceptVideoEl.setAttribute "disabled", "disabled"
+        cleanupScanning()
+    KEEP_TRYING_TIMEOUT
+  )
+
 
 beginScan = ->
 
@@ -161,9 +161,11 @@ beginScan = ->
     if result.video?.stream?
       # videoEl is now being streamed the video
       localMediaStream = stream
+      videoLoaded()
     else if result.upload?.fallback
       # the stream isn't available, but can fallback to image uploading
       localMediaStream = null
+      decodeFrame()
 
 
 errorHandler = (err) ->
