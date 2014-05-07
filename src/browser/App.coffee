@@ -19,7 +19,6 @@ appContainer.innerHTML = Handlebars.templates['main']()
 CHECK_TIMEOUT = 300
 KEEP_TRYING_TIMEOUT = 10000
 
-videoAvailable = false
 localMediaStream = null
 lastPrivateKeyValue = null
 inputEl = document.querySelector('input#private_key')
@@ -41,12 +40,6 @@ setup = (callback) ->
 
   video.setup {fallback: true, streamTo: video, width: 800, height: 800}
 
-  videoEl.addEventListener 'loadeddata', ->
-    videoAvailable = true
-
-  # Wait for the video stream's meta data to be loaded
-  videoEl.addEventListener 'loadedmetadata', videoLoaded, false
-
   decodeFrame = ->
     video.capture (err, uri) ->
       return console.log(err) if err?
@@ -59,8 +52,6 @@ setup = (callback) ->
   cleanupScanning = ->
 
     video.stop()
-    videoEl.src = ""
-    videoAvailable = false
 
     showImageOverVideo()
 

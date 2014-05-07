@@ -29,6 +29,7 @@ if MediaStreamTrack?
   MediaStreamTrack.getSources = MediaStreamTrack.getSources or MediaStreamTrack.getSourceInfos
 
 currentStream = null
+videoAvailable = false
 imageUpload = null
 useFallback = false
 dimensions = {width: 0, height: 0}
@@ -59,6 +60,9 @@ setup = (opts) ->
     videoEl.style.visibility = 'hidden'
     # FIXME: Is it necessary to append the element?
     document.body.appendChild videoEl
+
+  videoEl.addEventListener 'loadeddata', ->
+    videoAvailable = true
 
   if opts.width? and opts.height?
     dimensions.width = opts.width
@@ -107,7 +111,13 @@ start = (sourceId, next) ->
       if videoEl?
         videoEl.src = window.URL.createObjectURL(stream)
 
-      next null, video: stream: stream
+        # Wait for the video stream's meta data to be loaded
+        videoEl.addEventListener 'loadedmetadata', ( ->
+          next null, video: stream: stream
+        ), false
+
+      else
+        next null, video: stream: stream
 
     (err) ->
       next err
@@ -119,6 +129,11 @@ stop = ->
   if currentStream?
     currentStream.stop()
 
+  if videoEl?
+    videoEl.src = ""
+
+  videoAvailable = false
+
 # Capture a single still frame.
 # @param next callback, (err, dataUri)
 capture = (next) ->
@@ -128,6 +143,7 @@ capture = (next) ->
 
   # TODO: Better error message
   return next("Video Not Started") unless currentStream?
+  return next("Video Not Started") unless videoAvailable?
 
   # Correctly resize canvas element to same as video resolution
   canvasEl.width = videoEl.videoWidth
