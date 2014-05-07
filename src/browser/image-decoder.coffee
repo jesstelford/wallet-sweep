@@ -1,3 +1,4 @@
+zxing = require 'zxing'
 module.exports = (imgdecodeFrame, callback) ->
   zxing.decode(
     imgdecodeFrame
