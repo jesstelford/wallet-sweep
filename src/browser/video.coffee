@@ -19,7 +19,7 @@ video.start sourceId, (err, result) ->
 # ... later
 video.stop()
 
-###################
+###
 
 imageUploader = require 'image-uploader'
 
@@ -138,7 +138,7 @@ stop = ->
 # @param next callback, (err, dataUri)
 capture = (next) ->
 
-  if useFallback?
+  if useFallback
     return imageUpload next
 
   # TODO: Better error message
@@ -154,9 +154,9 @@ capture = (next) ->
 
   # "image/webp" works in Chrome.
   # Other browsers will fall back to image/png.
-  imgdecodeFrame = canvasEl.toDataURL('image/png')
+  imgFrame = canvasEl.toDataURL('image/png')
 
-  next null, imagedecodeFrame
+  next null, imgFrame
 
 # Call this to setup a fallback method of uploading an image instead of video
 # capture when video capture is not available
@@ -195,6 +195,7 @@ fallbackToImageUpload = (width, height) ->
 module.exports = {
   getVideoSources: getVideoSources
   setup: setup
+  start: start
   stop: stop
   capture: capture
 }

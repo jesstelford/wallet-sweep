@@ -32,24 +32,14 @@ sweepCoinsEl = document.querySelector('button#submit')
 sweepFormEl = document.getElementById('user_input')
 scanQREl = document.querySelector('button#scan_qrcode')
 
+captureInterval = null
+stopCheckingTimeout = null
+
 setup = (callback) ->
 
   imageEl.src = ""
-  captureInterval = null
-  stopCheckingTimeout = null
 
-  video.setup {fallback: true, streamTo: video, width: 800, height: 800}
-
-  cleanupScanning = ->
-
-    video.stop()
-
-    showImageOverVideo()
-
-    clearTimeout stopCheckingTimeout
-    clearInterval captureInterval
-    captureInterval = null
-    stopCheckingTimeout = null
+  video.setup {fallback: true, streamTo: videoEl, width: 800, height: 800}
 
   cancelVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
@@ -68,14 +58,13 @@ setup = (callback) ->
   callback()
 
 showImageOverVideo = ->
-  classUtils.addClass video, "hidden"
+  classUtils.addClass videoEl, "hidden"
   classUtils.removeClass imageEl, "hidden"
 
 imageDecoderCallback = (err, data) ->
-  imageEl.src = imgdecodeFrame
   if err?
     # TODO: Push these errors to the server?
-    console.log(err)
+    console.error(err)
     classUtils.removeClass modalEl, "scanning"
     classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
@@ -94,7 +83,7 @@ imageDecoderCallback = (err, data) ->
 setupQRModal = ->
 
   classUtils.addClass imageEl, "hidden"
-  classUtils.removeClass video, "hidden"
+  classUtils.removeClass videoEl, "hidden"
 
   classUtils.removeClass modalEl, "not_found"
   classUtils.removeClass modalEl, "found"
@@ -111,12 +100,23 @@ setupQRModal = ->
   rescanVideoEl.setAttribute "disabled", "disabled"
   acceptVideoEl.setAttribute "disabled", "disabled"
 
+cleanupScanning = ->
+
+  video.stop()
+
+  showImageOverVideo()
+
+  clearTimeout stopCheckingTimeout
+  clearInterval captureInterval
+  captureInterval = null
+  stopCheckingTimeout = null
+
 decodeFrame = ->
   video.capture (err, uri) ->
-    return console.log(err) if err?
+    return console.error(err) if err?
+    imageEl.src = uri
     imageDecoder uri, (err, data) ->
-      return console.log(err) if err?
-      imageEl.src = data
+      return console.error(err) if err?
       imageDecoderCallback err, data
       cleanupScanning()
 
@@ -133,13 +133,18 @@ videoLoaded = ->
   stopCheckingTimeout = setTimeout(
     ->
       video.capture (err, uri) ->
-        imageEl.src = uri
 
         classUtils.removeClass modalEl, "scanning"
         classUtils.removeClass modalEl, "loading"
         classUtils.addClass modalEl, "not_found"
         rescanVideoEl.removeAttribute "disabled"
         acceptVideoEl.setAttribute "disabled", "disabled"
+
+        if err?
+          # TODO: Better error handling / fallback
+          imageEl.src = ''
+
+        imageEl.src = uri
         cleanupScanning()
     KEEP_TRYING_TIMEOUT
   )
@@ -149,23 +154,26 @@ beginScan = ->
 
   setupQRModal()
 
-  video.start sourceId, (err, result) ->
+  video.start null, (err, result) ->
 
     if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
       console.error "Unable to access camera - check the browser settings before continuing"
-    else
-      console.error "Couldn't start video stream"
 
-    return console.log(err) if err?
+    return console.error(err) if err?
 
     if result.video?.stream?
       # videoEl is now being streamed the video
-      localMediaStream = stream
+      localMediaStream = result.video.stream
       videoLoaded()
     else if result.upload?.fallback
       # the stream isn't available, but can fallback to image uploading
       localMediaStream = null
       decodeFrame()
+
+    else
+      #TODO: Some error message
+      throw new Error "What happened?"
+
 
 
 errorHandler = (err) ->
@@ -231,7 +239,7 @@ formSubmit = ->
 
 setup (err) ->
 
-  return console.log(err) if err?
+  return console.error(err) if err?
 
   scanQREl.onclick = beginScan
 
