@@ -22,20 +22,20 @@ KEEP_TRYING_TIMEOUT = 10000
 videoAvailable = false
 localMediaStream = null
 lastPrivateKeyValue = null
-input = document.querySelector('input#private_key')
+inputEl = document.querySelector('input#private_key')
 videoEl = document.querySelector('.modal.qrcode video')
-modal = document.querySelector('.modal.qrcode')
-image = document.querySelector('.modal.qrcode img')
-cancelVideo = document.querySelector('.modal.qrcode button#cancel_video')
-rescanVideo = document.querySelector('.modal.qrcode button#rescan_video')
-acceptVideo = document.querySelector('.modal.qrcode button#accept_video')
-sweepCoins = document.querySelector('button#submit')
-sweepForm = document.getElementById('user_input')
-scanQR = document.querySelector('button#scan_qrcode')
+modalEl = document.querySelector('.modal.qrcode')
+imageEl = document.querySelector('.modal.qrcode img')
+cancelVideoEl = document.querySelector('.modal.qrcode button#cancel_video')
+rescanVideoEl = document.querySelector('.modal.qrcode button#rescan_video')
+acceptVideoEl = document.querySelector('.modal.qrcode button#accept_video')
+sweepCoinsEl = document.querySelector('button#submit')
+sweepFormEl = document.getElementById('user_input')
+scanQREl = document.querySelector('button#scan_qrcode')
 
 setup = (callback) ->
 
-  image.src = ""
+  imageEl.src = ""
   captureInterval = null
   stopCheckingTimeout = null
 
@@ -52,7 +52,7 @@ setup = (callback) ->
       return console.log(err) if err?
       imageDecoder uri, (err, data) ->
         return console.log(err) if err?
-        image.src = data
+        imageEl.src = data
         imageDecoderCallback err, data
         cleanupScanning()
 
@@ -82,28 +82,28 @@ setup = (callback) ->
     stopCheckingTimeout = setTimeout(
       ->
         video.capture (err, uri) ->
-          image.src = uri
+          imageEl.src = uri
 
-          classUtils.removeClass modal, "scanning"
-          classUtils.removeClass modal, "loading"
-          classUtils.addClass modal, "not_found"
-          rescanVideo.removeAttribute "disabled"
-          acceptVideo.setAttribute "disabled", "disabled"
+          classUtils.removeClass modalEl, "scanning"
+          classUtils.removeClass modalEl, "loading"
+          classUtils.addClass modalEl, "not_found"
+          rescanVideoEl.removeAttribute "disabled"
+          acceptVideoEl.setAttribute "disabled", "disabled"
           cleanupScanning()
       KEEP_TRYING_TIMEOUT
     )
 
-  cancelVideo.addEventListener 'click', ->
-    classUtils.addClass modal, "hidden"
+  cancelVideoEl.addEventListener 'click', ->
+    classUtils.addClass modalEl, "hidden"
     cleanupScanning()
-    input.value = lastPrivateKeyValue
+    inputEl.value = lastPrivateKeyValue
 
-  acceptVideo.addEventListener 'click', ->
-    classUtils.addClass modal, "hidden"
+  acceptVideoEl.addEventListener 'click', ->
+    classUtils.addClass modalEl, "hidden"
     cleanupScanning()
 
-  rescanVideo.addEventListener 'click', ->
-    classUtils.addClass modal, "hidden"
+  rescanVideoEl.addEventListener 'click', ->
+    classUtils.addClass modalEl, "hidden"
     cleanupScanning()
     beginScan()
 
@@ -111,47 +111,47 @@ setup = (callback) ->
 
 showImageOverVideo = ->
   classUtils.addClass video, "hidden"
-  classUtils.removeClass image, "hidden"
+  classUtils.removeClass imageEl, "hidden"
 
 imageDecoderCallback = (err, data) ->
-  image.src = imgdecodeFrame
+  imageEl.src = imgdecodeFrame
   if err?
     # TODO: Push these errors to the server?
     console.log(err)
-    classUtils.removeClass modal, "scanning"
-    classUtils.removeClass modal, "loading"
-    classUtils.addClass modal, "not_found"
-    rescanVideo.removeAttribute "disabled"
+    classUtils.removeClass modalEl, "scanning"
+    classUtils.removeClass modalEl, "loading"
+    classUtils.addClass modalEl, "not_found"
+    rescanVideoEl.removeAttribute "disabled"
   else
     # Looks like a private key, hooray!
-    lastPrivateKeyValue = input.value
-    input.value = data
+    lastPrivateKeyValue = inputEl.value
+    inputEl.value = data
     console.log "QR Code data:", data
-    classUtils.removeClass modal, "scanning"
-    classUtils.removeClass modal, "loading"
-    classUtils.addClass modal, "found"
-    acceptVideo.removeAttribute "disabled"
+    classUtils.removeClass modalEl, "scanning"
+    classUtils.removeClass modalEl, "loading"
+    classUtils.addClass modalEl, "found"
+    acceptVideoEl.removeAttribute "disabled"
 
 
 setupQRModal = ->
 
-  classUtils.addClass image, "hidden"
+  classUtils.addClass imageEl, "hidden"
   classUtils.removeClass video, "hidden"
 
-  classUtils.removeClass modal, "not_found"
-  classUtils.removeClass modal, "found"
-  classUtils.removeClass modal, "hidden"
-  classUtils.removeClass modal, "loading"
-  classUtils.removeClass modal, "scanning"
+  classUtils.removeClass modalEl, "not_found"
+  classUtils.removeClass modalEl, "found"
+  classUtils.removeClass modalEl, "hidden"
+  classUtils.removeClass modalEl, "loading"
+  classUtils.removeClass modalEl, "scanning"
 
   if navigator.getUserMedia
-    classUtils.addClass modal, "scanning"
+    classUtils.addClass modalEl, "scanning"
   else
-    classUtils.addClass modal, "loading"
+    classUtils.addClass modalEl, "loading"
 
-  cancelVideo.removeAttribute "disabled"
-  rescanVideo.setAttribute "disabled", "disabled"
-  acceptVideo.setAttribute "disabled", "disabled"
+  cancelVideoEl.removeAttribute "disabled"
+  rescanVideoEl.setAttribute "disabled", "disabled"
+  acceptVideoEl.setAttribute "disabled", "disabled"
 
 
 beginScan = ->
@@ -187,8 +187,8 @@ errorHandler = (err) ->
 
   attachModal 'error', data, mainContainer, 'button', ->
     # Re-enable buttons
-    sweepCoins.removeAttribute "disabled"
-    scanQR.removeAttribute "disabled"
+    sweepCoinsEl.removeAttribute "disabled"
+    scanQREl.removeAttribute "disabled"
 
 generateErrorMessage = (err) ->
   return errors[err.error](err.result) if errors[err.error]?
@@ -210,8 +210,8 @@ appendToElement = (element, html) ->
 formSubmit = ->
 
   # Protect against double clicks
-  sweepCoins.setAttribute "disabled", "disabled"
-  scanQR.setAttribute "disabled", "disabled"
+  sweepCoinsEl.setAttribute "disabled", "disabled"
+  scanQREl.setAttribute "disabled", "disabled"
 
   to = document.querySelector('#user_input #to_address').value
   privateKey = document.querySelector('#user_input #private_key').value
@@ -220,8 +220,8 @@ formSubmit = ->
 
     if err?
       # Re-enable the buttons
-      sweepCoins.removeAttribute "disabled"
-      scanQR.removeAttribute "disabled"
+      sweepCoinsEl.removeAttribute "disabled"
+      scanQREl.removeAttribute "disabled"
       return errorHandler err
 
     apiSweep to, privateKey, (err, data, xhr) ->
@@ -231,8 +231,8 @@ formSubmit = ->
 
       attachModal 'success', data.result, mainContainer, 'button', ->
         # Re-enable buttons
-        sweepCoins.removeAttribute "disabled"
-        scanQR.removeAttribute "disabled"
+        sweepCoinsEl.removeAttribute "disabled"
+        scanQREl.removeAttribute "disabled"
 
   return false
 
@@ -240,6 +240,6 @@ setup (err) ->
 
   return console.log(err) if err?
 
-  scanQR.onclick = beginScan
+  scanQREl.onclick = beginScan
 
-  sweepForm.onsubmit = formSubmit
+  sweepFormEl.onsubmit = formSubmit
