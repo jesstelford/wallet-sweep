@@ -37,6 +37,14 @@ canvasEl = null
 videoEl = null
 inputEl = null
 
+registeredMetaDataFunctions = []
+
+loadeddataEventListener = ->
+  videoAvailable = true
+
+loadedmetadataEventListener = (next, stream) ->
+  next null, video: stream: stream
+
 # Returns known video sources
 # NOTE: No known video sources does NOT imply that video capture is unsupported
 getVideoSources = (next) ->
@@ -61,8 +69,12 @@ setup = (opts) ->
     # FIXME: Is it necessary to append the element?
     document.body.appendChild videoEl
 
-  videoEl.addEventListener 'loadeddata', ->
-    videoAvailable = true
+  # Clear out any previous listener we might have registered
+  videoEl.removeEventListener 'loadeddata', loadeddataEventListener
+
+  # Re-add it. We have to do this since we can't enumerate the listeners to find
+  # out if it was previously registered
+  videoEl.addEventListener 'loadeddata', loadeddataEventListener
 
   if opts.width? and opts.height?
     dimensions.width = opts.width
@@ -111,10 +123,28 @@ start = (sourceId, next) ->
       if videoEl?
         videoEl.src = window.URL.createObjectURL(stream)
 
-        # Wait for the video stream's meta data to be loaded
-        videoEl.addEventListener 'loadedmetadata', ( ->
+        # remove all existing event listeners we previously registered for this
+        # element
+        for listener, index in registeredMetaDataFunctions when listener.el is videoEl
+          videoEl.removeEventListener('loadedmetadata', listener.func)
+
+        # Apparently the only way to iterate backwards over an array in
+        # coffeescript is to... not. So, we resort to inline Javascript
+        `for(var i = registeredMetaDataFunctions.length - 1; i >= 0; i--) {
+            if(registeredMetaDataFunctions[i].el === videoEl) {
+               registeredMetaDataFunctions.splice(i, 1);
+            }
+        }`
+
+        # Create the new event listner function
+        loadedmetadataListener =
           next null, video: stream: stream
-        ), false
+
+        # and save it for later when we will remove it
+        registeredMetaDataFunctions.push {el: videoEl, func: loadedmetadataListener}
+
+        # Wait for the video stream's meta data to be loaded
+        videoEl.addEventListener 'loadedmetadata', loadedmetadataListener, false
 
       else
         next null, video: stream: stream

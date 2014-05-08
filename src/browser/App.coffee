@@ -144,8 +144,9 @@ videoLoaded = ->
           # TODO: Better error handling / fallback
           imageEl.src = ''
 
-        imageEl.src = uri
         cleanupScanning()
+
+        imageEl.src = uri
     KEEP_TRYING_TIMEOUT
   )
 
