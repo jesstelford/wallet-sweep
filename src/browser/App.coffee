@@ -2,6 +2,7 @@
 # on the `BROWSER_MAIN_MODULE' variable set in Makefile
 require 'console-reset'
 video = require 'video'
+queryParams = require('query')()
 errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
@@ -21,7 +22,9 @@ KEEP_TRYING_TIMEOUT = 10000
 
 localMediaStream = null
 lastPrivateKeyValue = null
-inputEl = document.querySelector('input#private_key')
+
+toInputEl = document.querySelector('#user_input #to_address')
+privateInputEl = document.querySelector('input#private_key')
 videoEl = document.querySelector('.modal.qrcode video')
 modalEl = document.querySelector('.modal.qrcode')
 imageEl = document.querySelector('.modal.qrcode img')
@@ -44,7 +47,7 @@ setup = (callback) ->
   cancelVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
     cleanupScanning()
-    inputEl.value = lastPrivateKeyValue
+    privateInputEl.value = lastPrivateKeyValue
 
   acceptVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
@@ -54,6 +57,9 @@ setup = (callback) ->
     classUtils.addClass modalEl, "hidden"
     cleanupScanning()
     beginScan()
+
+  if 'to' of queryParams
+    toInputEl.value = queryParams.to
 
   callback()
 
@@ -71,8 +77,8 @@ imageDecoderCallback = (err, data) ->
     rescanVideoEl.removeAttribute "disabled"
   else
     # Looks like a private key, hooray!
-    lastPrivateKeyValue = inputEl.value
-    inputEl.value = data
+    lastPrivateKeyValue = privateInputEl.value
+    privateInputEl.value = data
     console.log "QR Code data:", data
     classUtils.removeClass modalEl, "scanning"
     classUtils.removeClass modalEl, "loading"
@@ -215,7 +221,7 @@ formSubmit = ->
   sweepCoinsEl.setAttribute "disabled", "disabled"
   scanQREl.setAttribute "disabled", "disabled"
 
-  to = document.querySelector('#user_input #to_address').value
+  to = toInputEl.value
   privateKey = document.querySelector('#user_input #private_key').value
 
   formValidation to, privateKey, (err) ->
@@ -243,5 +249,4 @@ setup (err) ->
   return console.error(err) if err?
 
   scanQREl.onclick = beginScan
-
   sweepFormEl.onsubmit = formSubmit
