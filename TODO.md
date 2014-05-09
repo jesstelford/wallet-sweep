@@ -4,7 +4,6 @@
 * Add options for importing wallet address from tip bots
   * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
   * /u/dogetipbot? Contact Josh.
-* Add a URL parameter for "to" address (which can then be [linked to from @tipdoge](https://twitter.com/Kim_Jong_Skill/status/460129136619442178) for example)
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
