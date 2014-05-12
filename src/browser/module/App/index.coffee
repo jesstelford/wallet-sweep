@@ -6,10 +6,10 @@ queryParams = require('query')()
 errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
-apiSweep = require 'api/sweep'
-attachModal = require 'ui/attach-modal'
+apiSweep = require '../../api/sweep'
+attachModal = require '../../ui/attach-modal'
 
-Handlebars = require './vendor/handlebars'
+Handlebars = require '../../vendor/handlebars'
 require 'templates/main.hbs'
 require 'templates/success.hbs'
 require 'templates/error.hbs'
