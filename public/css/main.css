@@ -44,13 +44,32 @@ a:hover {
 
 #app > header:before {
 	content: "Claim My Coin";
+	color: #c8b2ff;
+	font-weight: bold;
+}
+
+#app > header:before,
+#app > header > nav {
 	position: absolute;
 	left: 0;
 	right: 0;
 	top: 0;
 	width: 100%;
-	color: #c8b2ff;
-	font-weight: bold;
+}
+
+#app > header nav {
+	z-index: 1;
+}
+
+#app > header nav div {
+	width: 600px;
+	margin: 0 auto;
+	text-align: right;
+}
+
+#app > header nav a {
+	color: white;
+	font-size: 1.2em;
 }
 
 section, footer {
