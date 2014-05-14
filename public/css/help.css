@@ -1,0 +1,44 @@
+/*
+ * Colours:
+ *   Doge-brown: #F2EDE0
+ *   Red-muted: #df5e6a
+ *   Red-dark: #aa2230;
+ *   Green-muted: #9bc969
+ *   Green-dark: #628e33
+ *   Light-grey: #aaa
+ *   Dark-grey: #555
+ *   Almost-black: #222
+ *
+ * Doge symbol: &ETH; = \0110
+ *
+ */
+
+/* apply a natural box layout model to all elements */
+/* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
+*, *:before, *:after {
+	-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+
+nav {
+	height: 95px;
+	line-height: 95px;
+	background-color: #967adc;
+}
+
+nav > div {
+	display: table;
+	margin: 0 auto;
+	width: 600px;
+}
+
+nav > div a {
+	display: table-cell;
+	text-align: center;
+	color: white;
+	font-size: 1.2em;
+}
+
+#app section {
+	width: 600px;
+	margin: 0 auto;
+}

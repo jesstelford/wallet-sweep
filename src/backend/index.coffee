@@ -119,7 +119,7 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 app.get '/help', (req, res) ->
 
   res.send 200, Handlebars.templates['index']
-    stylesheet: 'css/main.css'
+    stylesheet: 'css/help.css'
     script: 'js/Help.js'
     envIsProduction: process.env.NODE_ENV is 'production'
 

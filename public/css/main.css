@@ -70,6 +70,7 @@ a:hover {
 #app > header nav a {
 	color: white;
 	font-size: 1.2em;
+	margin-left: 1em
 }
 
 section, footer {
