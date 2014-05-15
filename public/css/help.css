@@ -13,12 +13,6 @@
  *
  */
 
-/* apply a natural box layout model to all elements */
-/* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
-*, *:before, *:after {
-	-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
-}
-
 nav {
 	height: 95px;
 	line-height: 95px;
@@ -34,11 +28,29 @@ nav > div {
 nav > div a {
 	display: table-cell;
 	text-align: center;
-	color: white;
 	font-size: 1.2em;
+}
+
+nav > div a,
+nav > div a:focus,
+nav > div a:active,
+nav > div a:hover,
+nav > div a:visited {
+	color: white;
+}
+
+nav > div a:hover {
+	background-color: rgba(0,0,0,0.1);
+	text-decoration: underline;
 }
 
 #app section {
 	width: 600px;
 	margin: 0 auto;
+}
+
+dl dt {
+	font-weight: bold;
+	margin-top: 2em;
+	margin-bottom: 1em;
 }
