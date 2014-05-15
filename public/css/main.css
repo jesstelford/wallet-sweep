@@ -12,23 +12,6 @@
  * Doge symbol: &ETH; = \0110
  *
  */
-
-/* apply a natural box layout model to all elements */
-/* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
-*, *:before, *:after {
-	-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
-}
-
-a, a:visited {
-	color: #2a80b9;
-	text-decoration: none;
-}
-
-a:hover {
-	color: #439fe0;
-	text-decoration: none;
-}
-
 #app > header, #app > footer {
 	width: 100%;
 	text-align: center;
@@ -73,8 +56,8 @@ a:hover {
 	margin-left: 1em
 }
 
-section, footer {
-	color: #555;
+#app > header nav a:hover {
+	text-decoration: underline;
 }
 
 #app > footer {
@@ -98,13 +81,6 @@ section, footer {
 	margin: 0;
 	height: 95px;
 	overflow: hidden;
-}
-
-#main {
-	position: relative;
-	width: 600px;
-	margin: 0 auto;
-	padding-top: 20px;
 }
 
 #user_input {
@@ -222,15 +198,6 @@ button.continue:not([disabled]):active {
 #user_input input#to_address {
 	width: 100%;
 	margin-bottom: 10px;
-}
-
-.modal {
-	position: absolute;
-	left: 50%;
-	z-index: 10;
-	background-color: white;
-	-webkit-box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
-	box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
 }
 
 .modal.qrcode, .modal.successful-trans, .modal.error-message {
