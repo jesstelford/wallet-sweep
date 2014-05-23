@@ -45,7 +45,7 @@
   "licenses": [
     {
       "type": "FreeBSD",
-      "url": "https://github.com/jesstelford/wallet-sweep/blob/master/LICENSE"
+      "url": "https://github.com/jesstelford/wallet-sweep/blob/development/LICENSE"
     }
   ]
 }
