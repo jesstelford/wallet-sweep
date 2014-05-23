@@ -201,13 +201,10 @@ echo "Now run: $ cd wallet-sweep && make run"
 
 ## Powered By
 
- * [CoffeeScriptRedux](https://github.com/michaelficarra/CoffeeScriptRedux)
- * [CommonJS](http://www.commonjs.org)
- * [Commonjs-everywhere](https://github.com/michaelficarra/commonjs-everywhere)
- * [Express](http://expressjs.com)
- * [Handlebars](http://handlebarsjs.com)
- * [node.js](http://nodejs.org)
- * [npm](https://npmjs.org)
+ * [jsQRCode / ZXing](https://github.com/jesstelford/jsqrcode)
+ * [node-dogecoin](https://github.com/countable/node-dogecoin)
+ * [CryptoCoinJS](https://github.com/cryptocoinjs)
+ * [Coffee Boilerplate](https://github.com/jesstelford/coffee-boilerplate)
 
 ## Donations
 
