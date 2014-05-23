@@ -1,19 +1,19 @@
 {
-  "name": "project-name",
+  "name": "ClaimMyCoin",
   "version": "1.6.0",
-  "description": "Project Description",
-  "homepage": "https://github.com/github-user/project-name",
+  "description": "Dogecoin Paper Wallet sweeping made easy via cross platform QR code scanning in the browser",
+  "homepage": "https://github.com/jesstelford/wallet-sweep",
   "keywords": [],
   "author": {
-    "name": "Your Name",
-    "email": "Your Email",
-    "url": "Your URI"
+    "name": "Jess Telford",
+    "email": "jess@jes.st",
+    "url": "http://jes.st"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/github-user/project-name"
+    "url": "git://github.com/jesstelford/wallet-sweep"
   },
-  "bugs": "https://github.com/github-user/project-name/issues",
+  "bugs": "https://github.com/jesstelford/wallet-sweep/issues",
   "engines": {
     "node": "0.8.x || 0.9.x || 0.10.x"
   },
@@ -45,7 +45,7 @@
   "licenses": [
     {
       "type": "FreeBSD",
-      "url": "https://github.com/github-user/project-name/blob/master/LICENSE"
+      "url": "https://github.com/jesstelford/wallet-sweep/blob/master/LICENSE"
     }
   ]
 }
