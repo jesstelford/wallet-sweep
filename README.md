@@ -1,4 +1,4 @@
-# Dogecoin Wallet Sweeper
+# ClaimMyCo.in - A Dogecoin Wallet Sweeper
 
 [ClaimMyCo.in](http://claimmyco.in:3000) is a Dogecoin Wallet *Sweeper* (not to be confused with *Importing a Private Key*) born out of the need for a simple way to redeem Dogecoin Paper Wallets by scanning the wallet's QR Code.
 
