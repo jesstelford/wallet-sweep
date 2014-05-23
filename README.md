@@ -12,11 +12,13 @@ Visit [claimmyco.in](http://claimmyco.in:3000) and click the "Scan QR Code" butt
 
 Once scanned and validated, you can send the coins to any wallet you specify!
 
-# Coffee Boilerplate
+## Development
+
+### Based On [Coffee Boilerplate](https://github.com/jesstelford/coffee-boilerplate)
 
 A quickstart CoffeeScript node server, designed to serve compiled, minified, and source-mapped CoffeeScript modules to the browser, templated with Handlebars. 
 
-## Quickstart
+### Quickstart
 
 Install [nodejs](http://nodejs.org/download/).
 
@@ -30,38 +32,43 @@ $ make        # Build the project, and fire up a minimal server
 
 Open `http://localhost:3000` in your favourite browser
 
-(*note*: This boilerplate codebase contains no executable code, so you wont see
-anything when you launch that page)
-
-## Project Structure
+### Project Structure
 
 ```bash
 ├── lib                # Where the compiled backend coffeescript source is placed after `make X`
 ├── Makefile           # This Makefile defines the build (and other) tasks (see below for more)
-├── package.json       # Your project's description
+├── package.json       # The project's description
 ├── public             # Publically accessible directory
 │   ├── js             # Where the bundled coffeescript source is placed after `make X`
 │   └── vendor         # Place 3rd party assets here so it wont be erased upon compile
-├── src                # All your source will live here
-└── test               # Place your mocha test files here
+├── src                # All the source lives here
+└── test               # Place the mocha test files here
 ```
 
 The `src` directory is structured like so:
 ```bash
-├── backend            # Where all your backend code lives
+├── backend            # Where all the backend code lives
 │   ├── templates
 │   │   └── index.hbs  # The Handlebars template served up by the node server
 │   └── index.coffee   # The basic node server (powered by express)
-└── browser            # Where all your browser code lives
-    ├── templates
-    │   └── test.hbs   # An example Handlebars template rendered browser-side
+└── browser            # Where all the browser code lives
+    ├── templates      # The Handlebars templates rendered browser-side
     ├── vendor         # CommonJS modules to be included in the browser bundle
-    └── App.coffee     # The main CommonJs module, exported to the global namespace
+    └── module         # A directory of modules, each compiled down to a single .js file
+```
+
+The `module` directory is structured like so:
+```bash
+└── App                # The module's directory is also the name exported into global namespace
+    └── index.coffee   # The main CommonJs module, the entry point for this module
+└── Help
+    └── index.coffee
+└── ...
 ```
 
 See the `Makefile` to change some of the directories
 
-## Build info
+### Build info
 
 Available commands are contained in `Makefile`:
 
@@ -79,33 +86,17 @@ Available commands are contained in `Makefile`:
  * `$ make all`: Same as `$ make backend && make browser && make test`
  * `$ make release-[patch|minor|major]`: Update `package.json` version, create a git tag, then push to `origin`
 
-### Module Exported to the Browser
+### Modules Exported to the Browser
 
-The `Makefile` defines a variable `BROWSER_MAIN_MODULE` (default: `App`) which influences a number of factors:
+All compiled and minified modules are declared by creating a directory within `src/browser/module`, and giving it a CommonJS style `index.coffee` file as the entry point.
 
- 1. This must match the filename (without the `.coffee` extension) of the file within `src/browser` that contains the module to export
- 1. This will be used to name the compiled and minified `.js` file dropped into `public/js`
- 1. This will be used to name the exported object in the browser. For example, if `BROWSER_MAIN_MODULE = App`, then in the module exported to the browser is `window.App`
+The module's directory name will be used to name the compiled and minified `.js` file dropped into `public/js`. For example, `src/browser/module/App/index.coffee` will be compiled into `public/js/App.js`.
 
-## Example
+The directory name is also used as the exposed global variable for the module. In the above example, if you included `public/js/App.js` into the page, it would expose the variable `window.App`.
 
-See the `/src` directory for a basic example
+### Server Configuration
 
-## Project Settings
-
-Set project-appropriate values in the `package.json` file:
-
- * `name`
- * `description`
- * `homepage`
- * `author`
- * `repository`
- * `bugs`
- * `licenses`
-
-## Server Configuration
-
-### Upstart configuration
+#### Upstart configuration
 
 *`/etc/init/claimmycoin.conf`*
 
@@ -176,7 +167,7 @@ pre-stop script
 end script
 ```
 
-### Automated installation of latest tagged version
+#### Automated installation of latest tagged version
 
 *Note*: Only use this on a server as it doesn't check out the code
 
