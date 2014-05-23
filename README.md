@@ -1,107 +1,5 @@
 # Dogecoin Wallet Sweeper
 
-## Upstart configuration
-
-*`/etc/init/claimmycoin.conf`*
-
-```bash
-#!upstart
-
-description "claimmyco.in node server"
-author      "jess"
-
-start on (local-filesystems and net-device-up IFACE!=lo)
-stop  on shutdown
-
-respawn                # restart when job dies
-respawn limit 5 60     # give up restart after 5 respawns in 60 seconds
-
-script
-  user=username
-  project=/some/location
-  export HOME="/home/$user"  
-
-  echo $$ > /var/run/$user.pid
-  exec sudo -u $user sh -c "NODE_ENV=production LOG_DIR=/var/log/$user /usr/bin/node $project/lib/index.js >> /var/log/$user/sys.log 2>&1"
-end script
-
-pre-start script
-  # Date format same as (new Date()).toISOString() for consistency
-  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Starting" >> /var/log/$user/sys.log
-end script
-
-pre-stop script
-  rm /var/run/claimmycoin.pid
-  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Stopping" >> /var/log/$user/sys.log
-end script
-```
-
-*`/etc/init/dogecoind.conf`*
-
-```bash
-#!upstart
-
-description "dogecoind daemon"
-author      "jess"
-
-start on (local-filesystems and net-device-up IFACE!=lo)
-stop  on shutdown
-
-oom never
-expect daemon
-
-respawn                # restart when job dies
-respawn limit 5 60     # give up restart after 5 respawns in 60 seconds
-
-script
-
-  user=username
-  export HOME="/home/$user"  
-
-  exec sudo -u $user sh -c "/usr/bin/dogecoind >> /var/log/dogecoind/sys.log 2>&1"
-end script
-
-pre-start script
-  # Date format same as (new Date()).toISOString() for consistency
-  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Starting" >> /var/log/dogecoind/sys.log
-end script
-
-pre-stop script
-  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Stopping" >> /var/log/dogecoind/sys.log
-end script
-```
-
-## Automated installation of latest tagged version
-
-*Note*: Only use this on a server as it doesn't check out the code
-
-***`install.sh`***
-
-```bash
-#!/bin/sh
-version=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*name": ?"([^"]*)"/ && print($1) && exit')
-zipball_url=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*zipball_url": ?"([^"]*)"/ && print($1) && exit')
-name=wallet-sweep-$version
-
-wget $zipball_url -O $name.zip
-unzip $name.zip
-mv jesstelford-wallet-sweep-* $name
-
-cp dogecoin-config.json $name/src/backend/dogecoin-config.json
-
-cd $name
-npm install
-
-# Compile it
-make browser backend
-
-cd ../
-rm wallet-sweep
-ln -s $name wallet-sweep
-
-echo "Now run: $ cd wallet-sweep && make run"
-```
-
 # Coffee Boilerplate
 
 A quickstart CoffeeScript node server, designed to serve compiled, minified, and source-mapped CoffeeScript modules to the browser, templated with Handlebars. 
@@ -192,6 +90,111 @@ Set project-appropriate values in the `package.json` file:
  * `repository`
  * `bugs`
  * `licenses`
+
+## Server Configuration
+
+### Upstart configuration
+
+*`/etc/init/claimmycoin.conf`*
+
+```bash
+#!upstart
+
+description "claimmyco.in node server"
+author      "jess"
+
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop  on shutdown
+
+respawn                # restart when job dies
+respawn limit 5 60     # give up restart after 5 respawns in 60 seconds
+
+script
+  user=username
+  project=/some/location
+  export HOME="/home/$user"  
+
+  echo $$ > /var/run/$user.pid
+  exec sudo -u $user sh -c "NODE_ENV=production LOG_DIR=/var/log/$user /usr/bin/node $project/lib/index.js >> /var/log/$user/sys.log 2>&1"
+end script
+
+pre-start script
+  # Date format same as (new Date()).toISOString() for consistency
+  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Starting" >> /var/log/$user/sys.log
+end script
+
+pre-stop script
+  rm /var/run/claimmycoin.pid
+  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Stopping" >> /var/log/$user/sys.log
+end script
+```
+
+*`/etc/init/dogecoind.conf`*
+
+```bash
+#!upstart
+
+description "dogecoind daemon"
+author      "jess"
+
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop  on shutdown
+
+oom never
+expect daemon
+
+respawn                # restart when job dies
+respawn limit 5 60     # give up restart after 5 respawns in 60 seconds
+
+script
+
+  user=username
+  export HOME="/home/$user"  
+
+  exec sudo -u $user sh -c "/usr/bin/dogecoind >> /var/log/dogecoind/sys.log 2>&1"
+end script
+
+pre-start script
+  # Date format same as (new Date()).toISOString() for consistency
+  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Starting" >> /var/log/dogecoind/sys.log
+end script
+
+pre-stop script
+  echo "[`date -u +%Y-%m-%dT%T.%3NZ`] (sys) Stopping" >> /var/log/dogecoind/sys.log
+end script
+```
+
+### Automated installation of latest tagged version
+
+*Note*: Only use this on a server as it doesn't check out the code
+
+***`install.sh`***
+
+```bash
+#!/bin/sh
+version=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*name": ?"([^"]*)"/ && print($1) && exit')
+zipball_url=$(curl -s https://api.github.com/repos/jesstelford/wallet-sweep/tags | perl -ne '/.*zipball_url": ?"([^"]*)"/ && print($1) && exit')
+name=wallet-sweep-$version
+
+wget $zipball_url -O $name.zip
+unzip $name.zip
+mv jesstelford-wallet-sweep-* $name
+
+cp dogecoin-config.json $name/src/backend/dogecoin-config.json
+
+cd $name
+npm install
+
+# Compile it
+make browser backend
+
+cd ../
+rm wallet-sweep
+ln -s $name wallet-sweep
+
+echo "Now run: $ cd wallet-sweep && make run"
+```
+
 
 ## Powered By
 
