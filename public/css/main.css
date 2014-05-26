@@ -29,6 +29,11 @@ a:hover {
 	text-decoration: none;
 }
 
+#app.embedded > header,
+#app.embedded > footer {
+	display: none;
+}
+
 #app > header, #app > footer {
 	width: 100%;
 	text-align: center;
@@ -304,6 +309,10 @@ button.continue:not([disabled]):active {
 	background-color: #9bc969;
 }
 
+.embedded section#instructions {
+	display: none;
+}
+
 section#user_input, section#instructions {
 	margin-bottom: 100px;
 	text-align: center;
@@ -311,6 +320,11 @@ section#user_input, section#instructions {
 
 section#instructions ol {
 	margin-top: 40px;
+}
+
+.embedded section#user_input {
+	margin-top: 0;
+	margin-bottom: 0;
 }
 
 .successful-trans h1 {

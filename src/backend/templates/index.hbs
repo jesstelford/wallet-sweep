@@ -23,7 +23,7 @@
         <![endif]-->
 
         {{! Add your site or application content here }}
-        <section id="app"></section>
+        <section id="app"{{#if embedded}} class="embedded"{{/if}}></section>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="vendor/js/jquery-1.10.2.min.js"><\/script>')</script>

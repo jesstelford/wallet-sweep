@@ -120,6 +120,7 @@ app.get '/', (req, res) ->
 
   res.send 200, Handlebars.templates['index']
     envIsProduction: process.env.NODE_ENV is 'production'
+    embedded: req.query.embedded isnt undefined
 
 app.listen 3000
 logger.info "STARTUP: Listening on port 3000"
