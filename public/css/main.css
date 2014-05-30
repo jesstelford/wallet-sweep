@@ -12,23 +12,6 @@
  * Doge symbol: &ETH; = \0110
  *
  */
-
-/* apply a natural box layout model to all elements */
-/* See http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
-*, *:before, *:after {
-	-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
-}
-
-a, a:visited {
-	color: #2a80b9;
-	text-decoration: none;
-}
-
-a:hover {
-	color: #439fe0;
-	text-decoration: none;
-}
-
 #app.embedded > header,
 #app.embedded > footer {
 	display: none;
@@ -40,7 +23,7 @@ a:hover {
 }
 
 #app > header {
-	height: 150px;
+	height: 95px;
 	background-color: #967adc;
 	color: white;
 	margin-bottom: 30px;
@@ -48,20 +31,38 @@ a:hover {
 }
 
 #app > header:before {
-	content: "Sweeper";
+	content: "Claim My Coin";
+	color: #c8b2ff;
+	font-weight: bold;
+}
+
+#app > header:before,
+#app > header > nav {
 	position: absolute;
 	left: 0;
 	right: 0;
 	top: 0;
 	width: 100%;
-	padding-top: 20px;
-	font-size: 8em;
-	color: #c8b2ff;
-	font-weight: bold;
 }
 
-section, footer {
-	color: #555;
+#app > header nav {
+	z-index: 1;
+}
+
+#app > header nav div {
+	width: 600px;
+	margin: 0 auto;
+	text-align: right;
+}
+
+#app > header nav a {
+	color: white;
+	font-size: 1.2em;
+	margin-left: 1em
+}
+
+#app > header nav a:hover {
+	text-decoration: underline;
 }
 
 #app > footer {
@@ -74,20 +75,17 @@ section, footer {
 	margin-bottom: 0;
 }
 
+#app > header h1,
+#app > header:before {
+	padding-top: 20px;
+	font-size: 5em;
+}
+
 #app > header h1 {
 	position: relative;
 	margin: 0;
-	padding-top: 20px;
-	height: 150px;
-	font-size: 8em;
+	height: 95px;
 	overflow: hidden;
-}
-
-#main {
-	position: relative;
-	width: 600px;
-	margin: 0 auto;
-	padding-top: 20px;
 }
 
 #user_input {
@@ -205,15 +203,6 @@ button.continue:not([disabled]):active {
 #user_input input#to_address {
 	width: 100%;
 	margin-bottom: 10px;
-}
-
-.modal {
-	position: absolute;
-	left: 50%;
-	z-index: 10;
-	background-color: white;
-	-webkit-box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
-	box-shadow: 0 0 6px 0 rgba(0,0,0,0.5);
 }
 
 .modal.qrcode, .modal.successful-trans, .modal.error-message {

@@ -1,0 +1,56 @@
+/*
+ * Colours:
+ *   Doge-brown: #F2EDE0
+ *   Red-muted: #df5e6a
+ *   Red-dark: #aa2230;
+ *   Green-muted: #9bc969
+ *   Green-dark: #628e33
+ *   Light-grey: #aaa
+ *   Dark-grey: #555
+ *   Almost-black: #222
+ *
+ * Doge symbol: &ETH; = \0110
+ *
+ */
+
+nav {
+	height: 95px;
+	line-height: 95px;
+	background-color: #967adc;
+}
+
+nav > div {
+	display: table;
+	margin: 0 auto;
+	width: 600px;
+}
+
+nav > div a {
+	display: table-cell;
+	text-align: center;
+	font-size: 1.2em;
+}
+
+nav > div a,
+nav > div a:focus,
+nav > div a:active,
+nav > div a:hover,
+nav > div a:visited {
+	color: white;
+}
+
+nav > div a:hover {
+	background-color: rgba(0,0,0,0.1);
+	text-decoration: underline;
+}
+
+#app section {
+	width: 600px;
+	margin: 0 auto;
+}
+
+dl dt {
+	font-weight: bold;
+	margin-top: 2em;
+	margin-bottom: 1em;
+}
