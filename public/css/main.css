@@ -224,6 +224,16 @@ button.continue:not([disabled]):active {
 	margin-left: -200px;
 }
 
+.embedded .modal.qrcode,
+.embedded .modal.successful-trans,
+.embedded .modal.error-message {
+	top: 5px;
+	right: 5px;
+	bottom: 5px;
+	left: 5px;
+	margin-left: 0;
+}
+
 .qrcode #loading_image,
 .qrcode #not_found_message,
 .qrcode #found_message,
