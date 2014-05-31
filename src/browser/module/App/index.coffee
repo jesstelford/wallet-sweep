@@ -210,11 +210,6 @@ formValidation = (to, privateKey, next) ->
   # TODO
   next null
 
-appendToElement = (element, html) ->
-  d = document.createElement 'div'
-  d.innerHTML = html
-  return element.appendChild d.firstChild
-
 formSubmit = ->
 
   # Protect against double clicks
