@@ -1,5 +1,10 @@
 Handlebars = require '../vendor/handlebars'
 
+appendToElement = (element, html) ->
+  d = document.createElement 'div'
+  d.innerHTML = html
+  return element.appendChild d.firstChild
+
 module.exports = (templateName, data, toElement, dismissSelector, dismissCallback) ->
 
   return false unless Handlebars.templates[templateName]?
