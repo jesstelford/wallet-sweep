@@ -1,6 +1,6 @@
 {
   "name": "ClaimMyCoin",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Dogecoin Paper Wallet sweeping made easy via cross platform QR code scanning in the browser",
   "homepage": "https://github.com/jesstelford/wallet-sweep",
   "keywords": [],
