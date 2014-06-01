@@ -167,6 +167,17 @@ pre-stop script
 end script
 ```
 
+#### Port forwarding (80 -> 3000)
+
+***`/etc/rc.local`***
+
+```bash
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 3000
+```
+
+Upon restart, port 80 will be forwarded to port 3000. To get the effect without
+restarting, simply run the above command prefixed with `sudo `.
+
 #### Automated installation of latest tagged version
 
 *Note*: Only use this on a server as it doesn't check out the code
