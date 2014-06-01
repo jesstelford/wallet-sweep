@@ -41,6 +41,10 @@
 * Move entire process to client to enhance security
   * But leave a server API endpoint running so other apps can use it too
 * Move server to Fedora to [take advantage of systemd](http://savanne.be/articles/deploying-node-js-with-systemd/)
+* Paper Wallet Generator
+  * Instructions point back to claimmyco.in
+  * Fork from [Dogecoin Paper
+    Wallet](https://github.com/wellsriley/dogecoinpaperwallet)
 * Use airgapped computer to build transaction easily (as suggested by @kkaushik)
   1. Scan public key of paper wallet into online machine
   2. Online machine gives you an unsigned transaction
