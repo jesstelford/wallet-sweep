@@ -182,20 +182,20 @@ button.image {
 }
 
 button.img_camera {
-	width: 46px;
-	height: 32px;
-	margin: 4px 0; /* Brings total height up to 40px, same as the input box */
-	background-image: url(/img/camera.png);
+	width: 33px;
+	height: 33px;
+	margin: 3px 0 4px 0; /* Brings total height up to 40px, same as the input box */
+	background-image: url(/img/camera-qr.png);
 	background-repeat: no-repeat;
 }
 
 button.img_camera:hover,
 button.img_camera:focus {
-	background-position: 0 -32px;
+	background-position: 0 -33px;
 }
 
 button.img_camera:active {
-	background-position: 0 -64px;
+	background-position: 0 -66px;
 }
 
 
@@ -211,25 +211,22 @@ button.img_camera:active {
 	position: relative;
 }
 
+#user_input input#to_address,
 #user_input input#private_key {
 	width: 100%;
-	margin-right: -56px;
-	padding-right: 66px;
+	margin-right: -42px;
+	padding-right: 52px; /* 10px diff from margin-right as 'padding' */
 	z-index: 1;
+}
+
+#user_input input#to_address {
+	margin-bottom: 10px;
 }
 
 #user_input button#submit {
 	position: relative;
 	width: 100px;
 	z-index: 2;
-}
-
-#user_input input#to_address {
-	width: 100%;
-	margin-bottom: 10px;
-	margin-right: -56px;
-	padding-right: 66px;
-	z-index: 1;
 }
 
 .modal.qrcode, .modal.successful-trans, .modal.error-message {
