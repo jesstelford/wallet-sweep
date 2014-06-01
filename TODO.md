@@ -4,6 +4,9 @@
 * Add options for importing wallet address from tip bots
   * @tipdoge has [an API](https://twitter.com/Kim_Jong_Skill/status/460132589261430786)
   * /u/dogetipbot? Contact Josh.
+  * dogetip.co's QR codes are links to redemption - just make that 'clicky' [as
+    suggested by
+    /u/BuxtonTheRed](http://www.reddit.com/r/dogecoindev/comments/270ia6/request_for_testers_dogecoin_paper_wallet/chwdaog)
 * Register for SSL security
   * Adds security when POSTing private key
   * "Remembers" Webcam access confirmation
