@@ -17,8 +17,6 @@
   * Re-submit information and re-send transaction
 * Add a help page
   * Document errors / what they mean
-  * Write up an FAQ
-  * Brief intro on Dogecoin / Crypto with external links
 * Check for permission denied
   * Either [provide instructions on re-enabling](http://stackoverflow.com/a/19236538/473961)
   * or, switch over to the `<input>` method
@@ -29,7 +27,6 @@
 * Client side address validations
 * ~~Figure out TestNet address prefixes~~ See: [here](http://www.reddit.com/r/dogecoindev/comments/22dvlz/what_are_dogecoins_live_testnet_address_prefixes/cgm2qfv)
 * Test on mobile devices
-* Test on live network.
 * Allow selecting which camera to use on mobile
   * Add a "swap" icon in the camera feed on-screen
   * Cycle through available cameras each time swap icon touched
@@ -39,7 +36,7 @@
 * Move fee calculation to client
   * Avoids re-submitting private key over network
 * Move entire process to client to enhance security
-* * But leave a server API endpoint running so other apps can use it too
+  * But leave a server API endpoint running so other apps can use it too
 * Move server to Fedora to [take advantage of systemd](http://savanne.be/articles/deploying-node-js-with-systemd/)
 * Use airgapped computer to build transaction easily (as suggested by @kkaushik)
   1. Scan public key of paper wallet into online machine
