@@ -1,6 +1,6 @@
 # ClaimMyCo.in - A Dogecoin Wallet Sweeper
 
-[ClaimMyCo.in](http://claimmyco.in:3000) is a Dogecoin Wallet *Sweeper* (not to be confused with *Importing a Private Key*) born out of the need for a simple way to redeem Dogecoin Paper Wallets by scanning the wallet's QR Code.
+[ClaimMyCo.in](http://claimmyco.in) is a Dogecoin Wallet *Sweeper* (not to be confused with *Importing a Private Key*) born out of the need for a simple way to redeem Dogecoin Paper Wallets by scanning the wallet's QR Code.
 
 *Sweeping* simply gathers up all the coins in a Dogecoin Wallet and sends them to another Wallet's address. Once completed, the original wallet will be empty and can be discarded.
 
@@ -8,7 +8,7 @@
 
 To get started, ensure the "private key" of your Paper Wallet is clearly visible and not damaged or ripped.
 
-Visit [claimmyco.in](http://claimmyco.in:3000) and click the "Scan QR Code" button. Now, simply hold the QR code up to your webcam so it can be scanned.
+Visit [claimmyco.in](http://claimmyco.in) and click the "Scan QR Code" button. Now, simply hold the QR code up to your webcam so it can be scanned.
 
 Once scanned and validated, you can send the coins to any wallet you specify!
 
