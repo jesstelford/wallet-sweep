@@ -9,6 +9,8 @@ imageDecoder = require 'image-decoder'
 apiSweep = require '../../api/sweep'
 attachModal = require '../../ui/attach-modal'
 
+TimeoutError = require 'timeout-error'
+
 Handlebars = require '../../vendor/handlebars'
 require 'templates/main.hbs'
 require 'templates/success.hbs'
@@ -21,7 +23,7 @@ CHECK_TIMEOUT = 300
 KEEP_TRYING_TIMEOUT = 10000
 
 localMediaStream = null
-lastPrivateKeyValue = null
+lastKeyValue = null
 
 toInputEl = document.querySelector('#user_input #to_address')
 privateInputEl = document.querySelector('input#private_key')
@@ -33,7 +35,7 @@ rescanVideoEl = document.querySelector('.modal.qrcode button#rescan_video')
 acceptVideoEl = document.querySelector('.modal.qrcode button#accept_video')
 sweepCoinsEl = document.querySelector('button#submit')
 sweepFormEl = document.getElementById('user_input')
-scanQREl = document.querySelector('button#scan_qrcode')
+scanButtons = document.querySelectorAll('button.img_camera')
 
 captureInterval = null
 stopCheckingTimeout = null
@@ -47,7 +49,8 @@ setup = (callback) ->
   cancelVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
     cleanupScanning()
-    privateInputEl.value = lastPrivateKeyValue
+    targetName = modalEl.getAttribute 'data-name'
+    document.querySelector("[name=#{targetName}]").value = lastKeyValue
 
   acceptVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
@@ -56,7 +59,8 @@ setup = (callback) ->
   rescanVideoEl.addEventListener 'click', ->
     classUtils.addClass modalEl, "hidden"
     cleanupScanning()
-    beginScan()
+    targetName = modalEl.getAttribute 'data-name'
+    beginScan targetName
 
   if 'to' of queryParams
     toInputEl.value = queryParams.to
@@ -67,26 +71,27 @@ showImageOverVideo = ->
   classUtils.addClass videoEl, "hidden"
   classUtils.removeClass imageEl, "hidden"
 
-imageDecoderCallback = (err, data) ->
+imageDecoderCallback = (err, data, targetEl) ->
+
+  classUtils.removeClass modalEl, "scanning"
+  classUtils.removeClass modalEl, "loading"
+
   if err?
     # TODO: Push these errors to the server?
     console.error(err)
-    classUtils.removeClass modalEl, "scanning"
-    classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
     rescanVideoEl.removeAttribute "disabled"
+    acceptVideoEl.setAttribute "disabled", "disabled"
   else
     # Looks like a private key, hooray!
-    lastPrivateKeyValue = privateInputEl.value
-    privateInputEl.value = data
+    lastKeyValue = targetEl.value
+    targetEl.value = data
     console.log "QR Code data:", data
-    classUtils.removeClass modalEl, "scanning"
-    classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "found"
     acceptVideoEl.removeAttribute "disabled"
 
 
-setupQRModal = ->
+setupQRModal = (targetName) ->
 
   classUtils.addClass imageEl, "hidden"
   classUtils.removeClass videoEl, "hidden"
@@ -106,6 +111,8 @@ setupQRModal = ->
   rescanVideoEl.setAttribute "disabled", "disabled"
   acceptVideoEl.setAttribute "disabled", "disabled"
 
+  modalEl.setAttribute 'data-name', targetName
+
 cleanupScanning = ->
 
   video.stop()
@@ -117,49 +124,37 @@ cleanupScanning = ->
   captureInterval = null
   stopCheckingTimeout = null
 
-decodeFrame = ->
+decodeFrame = (next) ->
   video.capture (err, uri) ->
-    return console.error(err) if err?
+    return next(err) if err?
     imageEl.src = uri
-    imageDecoder uri, (err, data) ->
-      return console.error(err) if err?
-      imageDecoderCallback err, data
-      cleanupScanning()
+    imageDecoder uri, next
 
-videoLoaded = ->
+videoLoaded = (next) ->
 
   # Note: We purposely set these timeouts up AFTER the call to `getUserMedia`
   # due to code execution being delayed while the browser waits for user to
   # Allow access to video
 
   # Check the video for a qr code continuously
-  captureInterval = setInterval decodeFrame, CHECK_TIMEOUT
+  captureInterval = setInterval ( -> decodeFrame(next)), CHECK_TIMEOUT
 
   # Don't check forever
   stopCheckingTimeout = setTimeout(
     ->
       video.capture (err, uri) ->
 
-        classUtils.removeClass modalEl, "scanning"
-        classUtils.removeClass modalEl, "loading"
-        classUtils.addClass modalEl, "not_found"
-        rescanVideoEl.removeAttribute "disabled"
-        acceptVideoEl.setAttribute "disabled", "disabled"
+        return next(err) if err?
+        return next new TimeoutError("Exceeded check time of #{CHECK_TIMEOUT}ms"), uri
 
-        if err?
-          # TODO: Better error handling / fallback
-          imageEl.src = ''
 
-        cleanupScanning()
-
-        imageEl.src = uri
     KEEP_TRYING_TIMEOUT
   )
 
 
-beginScan = ->
+beginScan = (targetName) ->
 
-  setupQRModal()
+  setupQRModal targetName
 
   video.start null, (err, result) ->
 
@@ -168,14 +163,26 @@ beginScan = ->
 
     return console.error(err) if err?
 
+    next = (err, data) ->
+
+      if err?
+        # TODO: Better error handling / fallback
+        imageEl.src = ''
+
+      if err instanceof TimeoutError
+        imageEl.src = data
+
+      imageDecoderCallback err, data
+      cleanupScanning()
+
     if result.video?.stream?
       # videoEl is now being streamed the video
       localMediaStream = result.video.stream
-      videoLoaded()
+      videoLoaded next
     else if result.upload?.fallback
       # the stream isn't available, but can fallback to image uploading
       localMediaStream = null
-      decodeFrame()
+      decodeFrame next
 
     else
       #TODO: Some error message
@@ -196,7 +203,7 @@ errorHandler = (err) ->
   attachModal 'error', data, mainContainer, 'button', ->
     # Re-enable buttons
     sweepCoinsEl.removeAttribute "disabled"
-    scanQREl.removeAttribute "disabled"
+    enableScanButtons()
 
 generateErrorMessage = (err) ->
   return errors[err.error](err.result) if errors[err.error]?
@@ -214,17 +221,17 @@ formSubmit = ->
 
   # Protect against double clicks
   sweepCoinsEl.setAttribute "disabled", "disabled"
-  scanQREl.setAttribute "disabled", "disabled"
+  disableScanButtons()
 
   to = toInputEl.value
-  privateKey = document.querySelector('#user_input #private_key').value
+  privateKey = privateInputEl.value
 
   formValidation to, privateKey, (err) ->
 
     if err?
       # Re-enable the buttons
       sweepCoinsEl.removeAttribute "disabled"
-      scanQREl.removeAttribute "disabled"
+      enableScanButtons()
       return errorHandler err
 
     apiSweep to, privateKey, (err, data, xhr) ->
@@ -235,13 +242,28 @@ formSubmit = ->
       attachModal 'success', data.result, mainContainer, 'button', ->
         # Re-enable buttons
         sweepCoinsEl.removeAttribute "disabled"
-        scanQREl.removeAttribute "disabled"
+        enableScanButtons()
 
   return false
+
+enableScanButtons = ->
+  for el in scanButtons
+    el.setAttribute "disabled", "disabled"
+
+disableScanButtons = ->
+  for el in scanButtons
+    el.removeAttribute "disabled"
 
 setup (err) ->
 
   return console.error(err) if err?
 
-  scanQREl.onclick = beginScan
+  for el in scanButtons
+    targetName = el.getAttribute 'data-name'
+    do (targetName) ->
+      el.onclick = (event) ->
+        event.preventDefault()
+        beginScan targetName
+        return false
+
   sweepFormEl.onsubmit = formSubmit
