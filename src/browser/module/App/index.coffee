@@ -163,6 +163,8 @@ beginScan = (targetName) ->
 
   setupQRModal targetName
 
+  targetEl = document.querySelector "[name=#{targetName}]"
+
   video.start null, (err, result) ->
 
     if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
@@ -172,14 +174,18 @@ beginScan = (targetName) ->
 
     next = (err, data) ->
 
-      if err? and imageEl.src isnt ''
-        # TODO: Better error handling / fallback
-        imageEl.src = ''
+      if err?
 
-      if err instanceof TimeoutError
-        imageEl.src = data
+        if imageEl.src isnt ''
+          # TODO: Better error handling / fallback
+          imageEl.src = ''
 
-      imageDecoderCallback err, data
+        if err instanceof TimeoutError
+          imageEl.src = data
+        # else
+          # TODO: Some sort of other error happened - possibly a damaged QR code
+
+      imageDecoderCallback err, data, targetEl
       cleanupScanning()
 
     if result.video?.stream?
