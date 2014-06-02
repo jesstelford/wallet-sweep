@@ -12,6 +12,11 @@
  * Doge symbol: &ETH; = \0110
  *
  */
+#app.embedded > header,
+#app.embedded > footer {
+	display: none;
+}
+
 #app > header, #app > footer {
 	width: 100%;
 	text-align: center;
@@ -237,11 +242,21 @@ button.img_camera:active {
 	margin-left: -200px;
 }
 
+.embedded .modal.qrcode,
+.embedded .modal.successful-trans,
+.embedded .modal.error-message {
+	top: 0px;
+	left: 0px;
+	margin-left: 0;
+	min-width: 100%;
+	min-height: 100%;
+}
+
 .qrcode #loading_image,
 .qrcode #not_found_message,
 .qrcode #found_message,
 .qrcode video, .qrcode img {
-	margin: 40px 40px 15px 40px;
+	margin: 40px auto 15px auto;
 	width: 320px;
 	height: 240px;
 	line-height: 240px;
@@ -322,6 +337,10 @@ button.img_camera:active {
 	background-color: #9bc969;
 }
 
+.embedded section#instructions {
+	display: none;
+}
+
 section#user_input, section#instructions {
 	margin-bottom: 100px;
 	text-align: center;
@@ -329,6 +348,11 @@ section#user_input, section#instructions {
 
 section#instructions ol {
 	margin-top: 40px;
+}
+
+.embedded section#user_input {
+	margin-top: 0;
+	margin-bottom: 0;
 }
 
 .successful-trans h1 {

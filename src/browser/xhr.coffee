@@ -6,7 +6,8 @@ parseXhrResponse = (responseText, xhr) ->
     return JSON.parse responseText
   return responseText
 
-module.exports = (url, next) ->
-  tinyxhr url, (err, data, xhr) ->
+module.exports = (url, next, method, post, contenttype) ->
+  tinyxhr url, ((err, data, xhr) ->
     data = parseXhrResponse data, xhr
     next err, data, xhr
+  ), method, post, contenttype

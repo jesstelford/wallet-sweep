@@ -2,6 +2,7 @@ _ = require 'underscore'
 h5bp = require 'h5bp'
 path = require 'path'
 async = require 'async'
+config = require "#{__dirname}/config.json"
 logger = require "#{__dirname}/logger"
 Handlebars = require 'handlebars'
 transact = require "#{__dirname}/transact"
@@ -24,6 +25,10 @@ app = h5bp.createServer
   root: path.join(__dirname, "..", "public")
   www: false     # Redirect www.example.tld -> example.tld
   compress: true # gzip responses from the server
+
+# Allow overwriting the port via env variables
+if process.env.PORT?
+  config.port = process.env.PORT
 
 #if process.env.NODE_ENV is 'development'
   # Put development environment only routes + code here
@@ -129,6 +134,7 @@ app.get '/', (req, res) ->
     stylesheet: 'css/main.css'
     script: 'js/App.js'
     envIsProduction: process.env.NODE_ENV is 'production'
+    embedded: req.query.embedded isnt undefined
 
-app.listen 3000
-logger.info "STARTUP: Listening on port 3000"
+app.listen config.port
+logger.info "STARTUP: Listening on port #{config.port}"
