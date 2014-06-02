@@ -137,7 +137,14 @@ videoLoaded = (next) ->
   # Allow access to video
 
   # Check the video for a qr code continuously
-  captureInterval = setInterval ( -> decodeFrame(next)), CHECK_TIMEOUT
+  captureInterval = setInterval ( ->
+    decodeFrame( (err, data) ->
+      # This is a specific error reported when no QR code is found in the image,
+      # so instead of actually throwing an error, we just want to do nothing
+      if not err? or err isnt "Couldn't find enough finder patterns"
+        next err, data
+    )
+  ), CHECK_TIMEOUT
 
   # Don't check forever
   stopCheckingTimeout = setTimeout(
@@ -165,7 +172,7 @@ beginScan = (targetName) ->
 
     next = (err, data) ->
 
-      if err?
+      if err? and imageEl.src isnt ''
         # TODO: Better error handling / fallback
         imageEl.src = ''
 
