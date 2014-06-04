@@ -219,13 +219,10 @@ button.img_camera:active {
 #user_input input#to_address,
 #user_input input#private_key {
 	width: 100%;
+	margin-bottom: 10px;
 	margin-right: -42px;
 	padding-right: 52px; /* 10px diff from margin-right as 'padding' */
 	z-index: 1;
-}
-
-#user_input input#to_address {
-	margin-bottom: 10px;
 }
 
 #user_input button#submit {
