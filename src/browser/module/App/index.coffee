@@ -34,7 +34,7 @@ cancelVideoEl = document.querySelector('.modal.qrcode button#cancel_video')
 rescanVideoEl = document.querySelector('.modal.qrcode button#rescan_video')
 acceptVideoEl = document.querySelector('.modal.qrcode button#accept_video')
 sweepCoinsEl = document.querySelector('button#submit')
-sweepFormEl = document.getElementById('user_input')
+sweepFormEl = document.querySelector('#user_input form')
 scanButtons = document.querySelectorAll('button.img_camera')
 
 captureInterval = null
