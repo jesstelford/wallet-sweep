@@ -168,9 +168,9 @@ beginScan = (targetName) ->
   video.start null, (err, result) ->
 
     if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
-      console.error "Unable to access camera - check the browser settings before continuing"
+      return errorHandler error: err.name
 
-    return console.error(err) if err?
+    return errorHandler(err) if err?
 
     next = (err, data) ->
 
@@ -269,7 +269,7 @@ disableScanButtons = ->
 
 setup (err) ->
 
-  return console.error(err) if err?
+  return handleError(err) if err?
 
   for el in scanButtons
     targetName = el.getAttribute 'data-name'
