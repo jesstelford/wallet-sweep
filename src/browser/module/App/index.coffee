@@ -119,10 +119,10 @@ cleanupScanning = ->
 
 decodeFrame = ->
   video.capture (err, uri) ->
-    return console.error(err) if err?
+    return handleError(err) if err?
     imageEl.src = uri
     imageDecoder uri, (err, data) ->
-      return console.error(err) if err?
+      return handleError(err) if err?
       imageDecoderCallback err, data
       cleanupScanning()
 
@@ -164,9 +164,9 @@ beginScan = ->
   video.start null, (err, result) ->
 
     if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
-      console.error "Unable to access camera - check the browser settings before continuing"
+      return errorHandler error: err.name
 
-    return console.error(err) if err?
+    return errorHandler(err) if err?
 
     if result.video?.stream?
       # videoEl is now being streamed the video
@@ -241,7 +241,7 @@ formSubmit = ->
 
 setup (err) ->
 
-  return console.error(err) if err?
+  return handleError(err) if err?
 
   scanQREl.onclick = beginScan
   sweepFormEl.onsubmit = formSubmit
