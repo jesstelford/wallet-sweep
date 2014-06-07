@@ -70,7 +70,7 @@ showImageOverVideo = ->
 imageDecoderCallback = (err, data) ->
   if err?
     # TODO: Push these errors to the server?
-    console.error(err)
+    errorHandler err
     classUtils.removeClass modalEl, "scanning"
     classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
@@ -119,10 +119,10 @@ cleanupScanning = ->
 
 decodeFrame = ->
   video.capture (err, uri) ->
-    return handleError(err) if err?
+    return errorHandler(err) if err?
     imageEl.src = uri
     imageDecoder uri, (err, data) ->
-      return handleError(err) if err?
+      return errorHandler(err) if err?
       imageDecoderCallback err, data
       cleanupScanning()
 
@@ -184,6 +184,8 @@ beginScan = ->
 
 
 errorHandler = (err) ->
+  # TODO: Push these errors to the server?
+  console.error err
 
   data =
     error:
@@ -241,7 +243,7 @@ formSubmit = ->
 
 setup (err) ->
 
-  return handleError(err) if err?
+  return errorHandler(err) if err?
 
   scanQREl.onclick = beginScan
   sweepFormEl.onsubmit = formSubmit
