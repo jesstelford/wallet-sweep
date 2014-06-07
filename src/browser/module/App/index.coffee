@@ -70,7 +70,7 @@ showImageOverVideo = ->
 imageDecoderCallback = (err, data) ->
   if err?
     # TODO: Push these errors to the server?
-    console.error(err)
+    errorHandler err
     classUtils.removeClass modalEl, "scanning"
     classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
@@ -119,10 +119,10 @@ cleanupScanning = ->
 
 decodeFrame = ->
   video.capture (err, uri) ->
-    return console.error(err) if err?
+    return errorHandler(err) if err?
     imageEl.src = uri
     imageDecoder uri, (err, data) ->
-      return console.error(err) if err?
+      return errorHandler(err) if err?
       imageDecoderCallback err, data
       cleanupScanning()
 
@@ -164,9 +164,9 @@ beginScan = ->
   video.start null, (err, result) ->
 
     if Object::toString.call(err) is "[object NavigatorUserMediaError]" and err.name is "PermissionDeniedError"
-      console.error "Unable to access camera - check the browser settings before continuing"
+      return errorHandler error: err.name
 
-    return console.error(err) if err?
+    return errorHandler(err) if err?
 
     if result.video?.stream?
       # videoEl is now being streamed the video
@@ -184,6 +184,8 @@ beginScan = ->
 
 
 errorHandler = (err) ->
+  # TODO: Push these errors to the server?
+  console.error err
 
   data =
     error:
@@ -241,7 +243,7 @@ formSubmit = ->
 
 setup (err) ->
 
-  return console.error(err) if err?
+  return errorHandler(err) if err?
 
   scanQREl.onclick = beginScan
   sweepFormEl.onsubmit = formSubmit
