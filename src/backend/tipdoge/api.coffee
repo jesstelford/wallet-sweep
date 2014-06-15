@@ -7,8 +7,6 @@ buildBaseUrl = (config, action) ->
 
 getDepositAddressOfUser = (handle, next) ->
 
-  # TODO: strip leading "@" symbol
-
   url = buildBaseUrl config, action
   url += "&id=#{twitter.getUserInfo handle}"
 

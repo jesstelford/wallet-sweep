@@ -125,7 +125,10 @@ app.get '/api/get_address/twitter/:handle', (req, res) ->
 
   logger.profile 'profile: get_address/twitter'
 
-  handle = req.params.handle
+  handle = req.params.handle.trim()
+
+  if handle.indexOf('@') is 0
+    handle = handle.slice 1
 
   tipdoge.getDepositAddressOfUser handle, (err, body) ->
 
