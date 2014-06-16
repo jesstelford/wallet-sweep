@@ -7,6 +7,7 @@ errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
 apiSweep = require '../../api/sweep'
+apiTipDoge = require '../../api/tipdoge'
 attachModal = require '../../ui/attach-modal'
 
 TimeoutError = require 'timeout-error'
@@ -15,6 +16,7 @@ Handlebars = require '../../vendor/handlebars'
 require 'templates/main.hbs'
 require 'templates/success.hbs'
 require 'templates/error.hbs'
+require 'templates/tipdoge.hbs'
 
 appContainer = document.getElementById 'app'
 appContainer.innerHTML = Handlebars.templates['main']()
@@ -36,6 +38,7 @@ acceptVideoEl = document.querySelector('.modal.qrcode button#accept_video')
 sweepCoinsEl = document.querySelector('button#submit')
 sweepFormEl = document.querySelector('#user_input form')
 scanButtons = document.querySelectorAll('button.img_camera')
+tipDogeEl = document.querySelector('button.tip_doge')
 
 captureInterval = null
 stopCheckingTimeout = null
@@ -285,3 +288,42 @@ setup (err) ->
         return false
 
   sweepFormEl.onsubmit = formSubmit
+
+  tipDogeEl.onclick = (event) ->
+
+    event.preventDefault()
+
+    mainContainer = document.getElementById 'main'
+
+    attachModal 'tipdoge', {}, mainContainer, 'button', (next) ->
+
+      # Stop double-clicks
+      attachedElement = this
+      button = attachedElement.querySelector('button')
+      button.setAttribute "disabled", "disabled"
+
+      done = ->
+        # Re-enable buttons
+        sweepCoinsEl.removeAttribute "disabled"
+        enableScanButtons()
+        next()
+
+      # Normalize the user input
+      handle = attachedElement.querySelector('input').value
+      handle = handle.trim()
+      if handle.indexOf('@') is 0
+        handle = handle.slice(1).trim()
+
+      # If it's not value input, end
+      return done() if handle.length is 0 or handle.indexOf(' ') isnt -1
+
+      # Do the API calls to get the address
+      apiTipDoge handle, (err, data, xhr) ->
+        if err?
+          errorHandler(err)
+          return done()
+
+        toInputEl.value = data.result.address
+        done()
+
+    return false
