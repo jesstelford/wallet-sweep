@@ -108,6 +108,13 @@
 
 input[type=text], button {
 	border: 1px solid #ddd;
+}
+
+input[type=text],
+button,
+button:hover,
+button:focus,
+button:active {
 	outline: none;
 }
 
@@ -118,10 +125,6 @@ input[type=text]:active, button:not([disabled]):active,
 .input_and_button input[type=text] ~ button:not([disabled]):focus ,
 .input_and_button input[type=text] ~ button:not([disabled]):active {
 	border: 1px solid #aaa;
-}
-
-.input_and_button input[type=text] {
-	border-right: 0;
 }
 
 .input_and_button input[type=text] ~ button,
@@ -175,6 +178,32 @@ button.continue:not([disabled]):active {
 	border-color: #628e33;
 }
 
+button.image {
+	z-index: 1;
+	position: relative;
+	border: none !important; /* :( because of specificity of .input_and_button input[type=text] ~ button */
+	background-color: inherit;
+	background-position: 0 0;
+}
+
+button.img_camera {
+	width: 33px;
+	height: 33px;
+	margin: 3px 0 4px 0; /* Brings total height up to 40px, same as the input box */
+	background-image: url(/img/camera-qr.png);
+	background-repeat: no-repeat;
+}
+
+button.img_camera:hover,
+button.img_camera:focus {
+	background-position: 0 -33px;
+}
+
+button.img_camera:active {
+	background-position: 0 -66px;
+}
+
+
 .input_and_button {
 	display: inline-block;
 	white-space: nowrap;
@@ -187,10 +216,12 @@ button.continue:not([disabled]):active {
 	position: relative;
 }
 
+#user_input input#to_address,
 #user_input input#private_key {
 	width: 100%;
-	margin-right: -104px;
-	padding-right: 114px;
+	margin-bottom: 10px;
+	margin-right: -42px;
+	padding-right: 52px; /* 10px diff from margin-right as 'padding' */
 	z-index: 1;
 }
 
@@ -198,11 +229,6 @@ button.continue:not([disabled]):active {
 	position: relative;
 	width: 100px;
 	z-index: 2;
-}
-
-#user_input input#to_address {
-	width: 100%;
-	margin-bottom: 10px;
 }
 
 .modal.qrcode, .modal.successful-trans, .modal.error-message {

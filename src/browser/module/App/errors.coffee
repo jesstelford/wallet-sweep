@@ -35,7 +35,8 @@ module.exports =
 
 
 
-  "E_UNKNOWN": ->
+  "E_UNKNOWN": (err) ->
+    console.error(err) if err?
     "Not sure what happened, but we couldn't sweep those coins.<br />Refresh the page, and give it another shot."
 
   # Purposely left out:

@@ -4,6 +4,7 @@ path = require 'path'
 async = require 'async'
 config = require "#{__dirname}/config.json"
 logger = require "#{__dirname}/logger"
+tipdoge = require "#{__dirname}/tipdoge/api"
 Handlebars = require 'handlebars'
 transact = require "#{__dirname}/transact"
 dogecoind = require('node-dogecoin')(require "#{__dirname}/dogecoin-config.json")
@@ -115,6 +116,37 @@ app.post '/api/sweep/:from/:to', (req, res) ->
 
     # Stop the profiling
     logger.profile 'profile: sweep', from: fromInfo.address
+
+    res.json 200,
+      success: true
+      result: result
+
+app.get '/api/get_address/twitter/:handle', (req, res) ->
+
+  logger.profile 'profile: get_address/twitter'
+
+  handle = req.params.handle.trim()
+
+  if handle.indexOf('@') is 0
+    handle = handle.slice 1
+
+  tipdoge.getDepositAddressOfUser handle, (err, body) ->
+
+    if err?
+      logger.error 'get_address/twitter error', {error: err, handle: handle}
+
+      # Stop the profiling
+      logger.profile 'profile: get_address/twitter', {error: err, handle: handle}
+
+      return res.json err
+
+    # TODO: What is the actual key name?
+    result = body
+
+    logger.info 'get_address/twitter success', {result: body, handle: handle}
+
+    # Stop the profiling
+    logger.profile 'profile: get_address/twitter', {handle: handle}
 
     res.json 200,
       success: true
