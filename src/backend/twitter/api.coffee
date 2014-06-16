@@ -51,8 +51,59 @@ getAppOnlyBearerToken = (next) ->
     next null, appOnlyBearerToken
 
 
+appOnlyRequest = (options, next) ->
+
+  buildRequestOptions = (token) ->
+    requestOpts =
+      url: buildTwitterApiUrl options.action, options.query
+      method: options.method
+      headers:
+        'Authorization': "Bearer #{token}"
+      json: true
+
+    requestOpts.body = options.body if options.body
+
+    return requestOpts
+
+  invalidTokenRetriesRemaining = MAX_INVALID_TOKEN_RETRIES
+
+  makeRequest = ->
+
+    getAppOnlyBearerToken (err, token) ->
+      return next(err) if err?
+
+      requestOpts = buildRequestOptions token
+
+      request requestOpts, (err, response, body) ->
+        # TODO: Double check error is null when response.statusCode isnt 200
+        return next(err) if err?
+
+        # Trying to use an invalid bearer token
+        # See: https://dev.twitter.com/docs/auth/application-only-auth
+        if invalidTokenRetriesRemaining and response.statusCode is 401 and  _(body.errors).find((error) -> error.code is 89)?
+          # Limit the number of retries (and recursions)
+          invalidTokenRetriesRemaining--
+          # clear any cached token
+          clearBearerToken()
+          # and re-try the request
+          return makeRequest()
+
+        return next null, response, body
+
+  makeRequest()
+
+
 getUserInfo = (handle, next) ->
-  # TODO: Actually hit the API
-  next null, {id: 54400793}
+
+  options =
+    method: 'GET'
+    action: '1.1/users/show.json'
+    query:
+      screen_name: handle
+
+  appOnlyRequest options, (err, response, body) ->
+    return next(err) if err?
+
+    next null, {id: body.id_str}
 
 module.exports = {getUserInfo}
