@@ -221,7 +221,6 @@ errorHandler = (err) ->
 
   attachModal 'error', data, mainContainer, 'button', (next) ->
     # Re-enable buttons
-    sweepCoinsEl.removeAttribute "disabled"
     enableScanButtons()
     next()
 
@@ -240,7 +239,6 @@ formValidation = (to, privateKey, next) ->
 formSubmit = ->
 
   # Protect against double clicks
-  sweepCoinsEl.setAttribute "disabled", "disabled"
   disableScanButtons()
 
   to = toInputEl.value
@@ -250,7 +248,6 @@ formSubmit = ->
 
     if err?
       # Re-enable the buttons
-      sweepCoinsEl.removeAttribute "disabled"
       enableScanButtons()
       return errorHandler err
 
@@ -261,19 +258,20 @@ formSubmit = ->
 
       attachModal 'success', data.result, mainContainer, 'button', (next) ->
         # Re-enable buttons
-        sweepCoinsEl.removeAttribute "disabled"
         enableScanButtons()
         next()
 
   return false
 
 enableScanButtons = ->
-  for el in scanButtons
-    el.setAttribute "disabled", "disabled"
-
-disableScanButtons = ->
+  sweepCoinsEl.removeAttribute "disabled"
   for el in scanButtons
     el.removeAttribute "disabled"
+
+disableScanButtons = ->
+  sweepCoinsEl.setAttribute "disabled", "disabled"
+  for el in scanButtons
+    el.setAttribute "disabled", "disabled"
 
 setup (err) ->
 
@@ -283,6 +281,7 @@ setup (err) ->
     targetName = el.getAttribute 'data-name'
     do (targetName) ->
       el.onclick = (event) ->
+        debugger
         event.preventDefault()
         beginScan targetName
         return false
@@ -304,7 +303,6 @@ setup (err) ->
 
       done = ->
         # Re-enable buttons
-        sweepCoinsEl.removeAttribute "disabled"
         enableScanButtons()
         next()
 
