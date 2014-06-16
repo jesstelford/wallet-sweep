@@ -241,7 +241,8 @@ button.image:active {
 	z-index: 2;
 }
 
-.modal.qrcode, .modal.successful-trans, .modal.error-message {
+
+.modal.qrcode, .modal.successful-trans, .modal.error-message, .modal.tipdoge-handle {
 	display: block;
 	text-align: center;
 	top: -50px;
@@ -249,9 +250,14 @@ button.image:active {
 	margin-left: -200px;
 }
 
+.tipdoge-handle {
+	padding: 0 10px 20px 10px;
+}
+
 .embedded .modal.qrcode,
 .embedded .modal.successful-trans,
-.embedded .modal.error-message {
+.embedded .modal.error-message,
+.embedded .modal.tipdoge-handle {
 	top: 0px;
 	left: 0px;
 	margin-left: 0;
@@ -407,7 +413,7 @@ section#instructions ol {
 	font-style: italic;
 }
 
-.successful-trans > p, .error-message > p {
+.successful-trans > p, .error-message > p, .tipdoge-handle > p {
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -419,12 +425,16 @@ section#instructions ol {
 	font-style: italic;
 }
 
-.error-message > p {
+.error-message > p, .tipdoge-handle > p {
 	width: 80%;
 }
 
 .error-message h1 {
 	color: #aa2230;
+}
+
+.tipdoge-handle > h1 {
+	color: #555;
 }
 
 .doge:after {
