@@ -184,22 +184,27 @@ button.image {
 	border: none !important; /* :( because of specificity of .input_and_button input[type=text] ~ button */
 	background-color: inherit;
 	background-position: 0 0;
-}
-
-button.img_camera {
-	width: 33px;
 	height: 33px;
 	margin: 3px 0 4px 0; /* Brings total height up to 40px, same as the input box */
-	background-image: url(/img/camera-qr.png);
 	background-repeat: no-repeat;
 }
 
-button.img_camera:hover,
-button.img_camera:focus {
+button.img_camera {
+	background-image: url(/img/camera-qr.png);
+	width: 33px;
+}
+
+button.tip_doge {
+	background-image: url(/img/twitter-button.png);
+	width: 40px;
+}
+
+button.image:hover,
+button.image:focus {
 	background-position: 0 -33px;
 }
 
-button.img_camera:active {
+button.image:active {
 	background-position: 0 -66px;
 }
 
@@ -225,13 +230,19 @@ button.img_camera:active {
 	z-index: 1;
 }
 
+#user_input input#to_address {
+	margin-right: -87px;
+	padding-right: 97px; /* 10px diff from margin-right as 'padding' */
+}
+
 #user_input button#submit {
 	position: relative;
 	width: 100px;
 	z-index: 2;
 }
 
-.modal.qrcode, .modal.successful-trans, .modal.error-message {
+
+.modal.qrcode, .modal.successful-trans, .modal.error-message, .modal.tipdoge-handle {
 	display: block;
 	text-align: center;
 	top: -50px;
@@ -239,9 +250,14 @@ button.img_camera:active {
 	margin-left: -200px;
 }
 
+.tipdoge-handle {
+	padding: 0 10px 20px 10px;
+}
+
 .embedded .modal.qrcode,
 .embedded .modal.successful-trans,
-.embedded .modal.error-message {
+.embedded .modal.error-message,
+.embedded .modal.tipdoge-handle {
 	top: 0px;
 	left: 0px;
 	margin-left: 0;
@@ -397,7 +413,7 @@ section#instructions ol {
 	font-style: italic;
 }
 
-.successful-trans > p, .error-message > p {
+.successful-trans > p, .error-message > p, .tipdoge-handle > p {
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -409,12 +425,16 @@ section#instructions ol {
 	font-style: italic;
 }
 
-.error-message > p {
+.error-message > p, .tipdoge-handle > p {
 	width: 80%;
 }
 
 .error-message h1 {
 	color: #aa2230;
+}
+
+.tipdoge-handle > h1 {
+	color: #555;
 }
 
 .doge:after {

@@ -7,6 +7,7 @@ errors = require 'errors'
 classUtils = require 'class-utils'
 imageDecoder = require 'image-decoder'
 apiSweep = require '../../api/sweep'
+apiTipDoge = require '../../api/tipdoge'
 attachModal = require '../../ui/attach-modal'
 
 TimeoutError = require 'timeout-error'
@@ -15,6 +16,7 @@ Handlebars = require '../../vendor/handlebars'
 require 'templates/main.hbs'
 require 'templates/success.hbs'
 require 'templates/error.hbs'
+require 'templates/tipdoge.hbs'
 
 appContainer = document.getElementById 'app'
 appContainer.innerHTML = Handlebars.templates['main']()
@@ -36,6 +38,7 @@ acceptVideoEl = document.querySelector('.modal.qrcode button#accept_video')
 sweepCoinsEl = document.querySelector('button#submit')
 sweepFormEl = document.querySelector('#user_input form')
 scanButtons = document.querySelectorAll('button.img_camera')
+tipDogeEl = document.querySelector('button.tip_doge')
 
 captureInterval = null
 stopCheckingTimeout = null
@@ -216,10 +219,10 @@ errorHandler = (err) ->
 
   mainContainer = document.getElementById 'main'
 
-  attachModal 'error', data, mainContainer, 'button', ->
+  attachModal 'error', data, mainContainer, 'button', (next) ->
     # Re-enable buttons
-    sweepCoinsEl.removeAttribute "disabled"
     enableScanButtons()
+    next()
 
 generateErrorMessage = (err) ->
   return errors[err.error](err.result) if errors[err.error]?
@@ -236,7 +239,6 @@ formValidation = (to, privateKey, next) ->
 formSubmit = ->
 
   # Protect against double clicks
-  sweepCoinsEl.setAttribute "disabled", "disabled"
   disableScanButtons()
 
   to = toInputEl.value
@@ -246,7 +248,6 @@ formSubmit = ->
 
     if err?
       # Re-enable the buttons
-      sweepCoinsEl.removeAttribute "disabled"
       enableScanButtons()
       return errorHandler err
 
@@ -255,20 +256,22 @@ formSubmit = ->
 
       mainContainer = document.getElementById 'main'
 
-      attachModal 'success', data.result, mainContainer, 'button', ->
+      attachModal 'success', data.result, mainContainer, 'button', (next) ->
         # Re-enable buttons
-        sweepCoinsEl.removeAttribute "disabled"
         enableScanButtons()
+        next()
 
   return false
 
 enableScanButtons = ->
-  for el in scanButtons
-    el.setAttribute "disabled", "disabled"
-
-disableScanButtons = ->
+  sweepCoinsEl.removeAttribute "disabled"
   for el in scanButtons
     el.removeAttribute "disabled"
+
+disableScanButtons = ->
+  sweepCoinsEl.setAttribute "disabled", "disabled"
+  for el in scanButtons
+    el.setAttribute "disabled", "disabled"
 
 setup (err) ->
 
@@ -278,8 +281,47 @@ setup (err) ->
     targetName = el.getAttribute 'data-name'
     do (targetName) ->
       el.onclick = (event) ->
+        debugger
         event.preventDefault()
         beginScan targetName
         return false
 
   sweepFormEl.onsubmit = formSubmit
+
+  tipDogeEl.onclick = (event) ->
+
+    event.preventDefault()
+
+    mainContainer = document.getElementById 'main'
+
+    attachModal 'tipdoge', {}, mainContainer, 'button', (next) ->
+
+      # Stop double-clicks
+      attachedElement = this
+      button = attachedElement.querySelector('button')
+      button.setAttribute "disabled", "disabled"
+
+      done = ->
+        # Re-enable buttons
+        enableScanButtons()
+        next()
+
+      # Normalize the user input
+      handle = attachedElement.querySelector('input').value
+      handle = handle.trim()
+      if handle.indexOf('@') is 0
+        handle = handle.slice(1).trim()
+
+      # If it's not value input, end
+      return done() if handle.length is 0 or handle.indexOf(' ') isnt -1
+
+      # Do the API calls to get the address
+      apiTipDoge handle, (err, data, xhr) ->
+        if err?
+          errorHandler(err)
+          return done()
+
+        toInputEl.value = data.result.address
+        done()
+
+    return false
