@@ -78,7 +78,9 @@ imageDecoderCallback = (err, data, targetEl) ->
 
   if err?
     # TODO: Push these errors to the server?
-    console.error(err)
+    errorHandler err
+    classUtils.removeClass modalEl, "scanning"
+    classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
     rescanVideoEl.removeAttribute "disabled"
     acceptVideoEl.setAttribute "disabled", "disabled"
@@ -204,6 +206,8 @@ beginScan = (targetName) ->
 
 
 errorHandler = (err) ->
+  # TODO: Push these errors to the server?
+  console.error err
 
   data =
     error:
@@ -269,7 +273,7 @@ disableScanButtons = ->
 
 setup (err) ->
 
-  return handleError(err) if err?
+  return errorHandler(err) if err?
 
   for el in scanButtons
     targetName = el.getAttribute 'data-name'
