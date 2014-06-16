@@ -121,7 +121,7 @@ app.post '/api/sweep/:from/:to', (req, res) ->
       success: true
       result: result
 
-app.get '/api/get_address/twitter/:handle', (req, res) ->
+app.get '/api/tipdoge/address/:handle', (req, res) ->
 
   logger.profile 'profile: get_address/twitter'
 
