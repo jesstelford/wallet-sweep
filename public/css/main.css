@@ -184,22 +184,27 @@ button.image {
 	border: none !important; /* :( because of specificity of .input_and_button input[type=text] ~ button */
 	background-color: inherit;
 	background-position: 0 0;
-}
-
-button.img_camera {
-	width: 33px;
 	height: 33px;
 	margin: 3px 0 4px 0; /* Brings total height up to 40px, same as the input box */
-	background-image: url(/img/camera-qr.png);
 	background-repeat: no-repeat;
 }
 
-button.img_camera:hover,
-button.img_camera:focus {
+button.img_camera {
+	background-image: url(/img/camera-qr.png);
+	width: 33px;
+}
+
+button.tip_doge {
+	background-image: url(/img/twitter-button.png);
+	width: 40px;
+}
+
+button.image:hover,
+button.image:focus {
 	background-position: 0 -33px;
 }
 
-button.img_camera:active {
+button.image:active {
 	background-position: 0 -66px;
 }
 
@@ -223,6 +228,11 @@ button.img_camera:active {
 	margin-right: -42px;
 	padding-right: 52px; /* 10px diff from margin-right as 'padding' */
 	z-index: 1;
+}
+
+#user_input input#to_address {
+	margin-right: -87px;
+	padding-right: 97px; /* 10px diff from margin-right as 'padding' */
 }
 
 #user_input button#submit {
