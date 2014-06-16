@@ -11,7 +11,7 @@ getDepositAddressOfUser = (handle, next) ->
 
     return next(err) if err?
 
-    url = buildBaseUrl config, action
+    url = buildBaseUrl config, "getDepositAddressOfUser"
     url += "&id=#{info.id}"
 
     options =
