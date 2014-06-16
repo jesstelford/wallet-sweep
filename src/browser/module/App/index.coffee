@@ -216,10 +216,11 @@ errorHandler = (err) ->
 
   mainContainer = document.getElementById 'main'
 
-  attachModal 'error', data, mainContainer, 'button', ->
+  attachModal 'error', data, mainContainer, 'button', (next) ->
     # Re-enable buttons
     sweepCoinsEl.removeAttribute "disabled"
     enableScanButtons()
+    next()
 
 generateErrorMessage = (err) ->
   return errors[err.error](err.result) if errors[err.error]?
@@ -255,10 +256,11 @@ formSubmit = ->
 
       mainContainer = document.getElementById 'main'
 
-      attachModal 'success', data.result, mainContainer, 'button', ->
+      attachModal 'success', data.result, mainContainer, 'button', (next) ->
         # Re-enable buttons
         sweepCoinsEl.removeAttribute "disabled"
         enableScanButtons()
+        next()
 
   return false
 
