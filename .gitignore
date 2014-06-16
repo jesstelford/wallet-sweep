@@ -11,3 +11,4 @@ node_modules
 tags
 src/backend/dogecoin-config.json
 src/backend/tipdoge/config.json
+src/backend/twitter/config.json
