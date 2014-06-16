@@ -78,7 +78,6 @@ imageDecoderCallback = (err, data, targetEl) ->
 
   if err?
     # TODO: Push these errors to the server?
-    errorHandler err
     classUtils.removeClass modalEl, "scanning"
     classUtils.removeClass modalEl, "loading"
     classUtils.addClass modalEl, "not_found"
