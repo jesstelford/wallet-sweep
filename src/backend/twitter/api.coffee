@@ -1,5 +1,5 @@
-getUserInfo = (handle) ->
+getUserInfo = (handle, next) ->
   # TODO: Actually hit the API
-  return {id: 0}
+  next null, {id: 0}
 
 module.exports = {getUserInfo}
